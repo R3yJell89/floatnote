@@ -1,0 +1,43 @@
+<UserControl x:Class="FloatNote.Views.AudioViewControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Margin="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Tone Section -->
+            <RowDefinition Height="*"/>    <!-- Voice Notes / Dictation -->
+        </Grid.RowDefinitions>
+
+        <!-- BEEP Generator Card -->
+        <Border Grid.Row="0" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource SubtleBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+            <StackPanel>
+                <TextBlock Text="Цензурный BEEP (Тестовый тон)" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
+                <TextBlock Text="Чистый синус 1000 Гц (-18 dBFS)" Foreground="{StaticResource TextPrimaryBrush}" FontSize="12" Margin="0,4,0,8"/>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Button Click="Play440_Click" Content="440Hz" Padding="8,4" Background="#20FFFFFF" Foreground="White" BorderThickness="0" Margin="0,0,4,0" Cursor="Hand"/>
+                        <Button Click="Play1000_Click" Content="1000Hz" Padding="8,4" Background="{StaticResource AccentGreenBrush}" Foreground="White" BorderThickness="0" Margin="0,0,4,0" Cursor="Hand"/>
+                        <Button Click="Play2000_Click" Content="2000Hz" Padding="8,4" Background="#20FFFFFF" Foreground="White" BorderThickness="0" Cursor="Hand"/>
+                    </StackPanel>
+
+                    <Button Grid.Column="1" Click="DragWav_Click" Content="💾 WAV в таймлайн" Padding="10,4" Background="#33FFFFFF" Foreground="White" BorderThickness="0" Cursor="Hand"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- Voice Notes Placeholder Card -->
+        <Border Grid.Row="1" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource SubtleBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="🎙" FontSize="28" HorizontalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"/>
+                <TextBlock Text="Голосовые заметки монтажа" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" FontSize="13" HorizontalAlignment="Center" Margin="0,6,0,2"/>
+                <TextBlock Text="Нажмите Win + H для нативной диктовки Windows" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

@@ -12,6 +12,10 @@ namespace FloatNote.Views;
 public partial class MainWindow : Window
 {
     private readonly StorageManager _storage = StorageManager.Instance;
+    private TimerWindow? _timerWindow;
+    private ClipboardWindow? _clipboardWindow;
+    private SafeAreasWindow? _safeAreasWindow;
+    private ReferenceWindow? _referenceWindow;
 
     public MainWindow()
     {
@@ -21,15 +25,12 @@ public partial class MainWindow : Window
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
-        // 1. Apply Windows 11 PowerToys Acrylic / Mica blur
         Win32Helper.ApplyPowerToysTheme(this, useAcrylic: true);
 
-        // 2. Load preferences & window dimensions
         Width = _storage.Preferences.WindowWidth > 0 ? _storage.Preferences.WindowWidth : 380;
         Height = _storage.Preferences.WindowHeight > 0 ? _storage.Preferences.WindowHeight : 480;
         Topmost = _storage.Preferences.IsPinned;
 
-        // 3. Load initial checklist and notes
         RefreshChecklist();
         NotesTextBox.Text = _storage.NotesText;
     }
@@ -42,10 +43,7 @@ public partial class MainWindow : Window
 
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ButtonState == MouseButtonState.Pressed)
-        {
-            DragMove();
-        }
+        if (e.ButtonState == MouseButtonState.Pressed) DragMove();
     }
 
     private void PinButton_Click(object sender, RoutedEventArgs e)
@@ -63,7 +61,8 @@ public partial class MainWindow : Window
 
     private void Close_Click(object sender, RoutedEventArgs e)
     {
-        _storage.SaveAll();
+        _storage.SaveChecklist();
+        _storage.SavePreferences();
         Application.Current.Shutdown();
     }
 
@@ -74,15 +73,44 @@ public partial class MainWindow : Window
         settingsWin.ShowDialog();
     }
 
+    private void ToggleTimer_Click(object sender, RoutedEventArgs e)
+    {
+        _timerWindow ??= new TimerWindow();
+        if (_timerWindow.IsVisible) _timerWindow.Hide(); else _timerWindow.Show();
+    }
+
+    private void ToggleClipboard_Click(object sender, RoutedEventArgs e)
+    {
+        _clipboardWindow ??= new ClipboardWindow();
+        if (_clipboardWindow.IsVisible) _clipboardWindow.Hide(); else _clipboardWindow.Show();
+    }
+
+    private void ToggleSafeAreas_Click(object sender, RoutedEventArgs e)
+    {
+        _safeAreasWindow ??= new SafeAreasWindow();
+        if (_safeAreasWindow.IsVisible) _safeAreasWindow.Hide(); else _safeAreasWindow.Show();
+    }
+
+    private void ToggleReference_Click(object sender, RoutedEventArgs e)
+    {
+        _referenceWindow ??= new ReferenceWindow();
+        if (_referenceWindow.IsVisible) _referenceWindow.Hide(); else _referenceWindow.Show();
+    }
+
     private void Tab_Checked(object sender, RoutedEventArgs e)
     {
         if (sender is RadioButton rb)
         {
             bool isChecklist = rb == TabChecklist;
             bool isNotes = rb == TabNotes;
+            bool isAudio = rb == TabAudio;
+            bool isSketch = rb == TabSketch;
 
             if (ChecklistScrollViewer != null) ChecklistScrollViewer.Visibility = isChecklist ? Visibility.Visible : Visibility.Collapsed;
+            if (BottomInputBar != null) BottomInputBar.Visibility = isChecklist ? Visibility.Visible : Visibility.Collapsed;
             if (NotesTextBox != null) NotesTextBox.Visibility = isNotes ? Visibility.Visible : Visibility.Collapsed;
+            if (AudioControl != null) AudioControl.Visibility = isAudio ? Visibility.Visible : Visibility.Collapsed;
+            if (SketchControl != null) SketchControl.Visibility = isSketch ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 
@@ -103,7 +131,6 @@ public partial class MainWindow : Window
         RefreshChecklist();
         NewTaskInput.Clear();
 
-        // Reverse marker creation on DaVinci Resolve
         if (!string.IsNullOrEmpty(timecode) && _storage.Preferences.AutoCreateMarkers)
         {
             NLEBridgeWindows.AddMarkerToNLE(timecode, cleanTitle, _storage.Preferences.TargetNLE);
@@ -112,10 +139,7 @@ public partial class MainWindow : Window
 
     private void NewTaskInput_KeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Enter)
-        {
-            AddTask();
-        }
+        if (e.Key == Key.Enter) AddTask();
     }
 
     private void AddTaskButton_Click(object sender, RoutedEventArgs e)

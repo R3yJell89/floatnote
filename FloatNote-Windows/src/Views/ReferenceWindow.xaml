@@ -1,0 +1,57 @@
+<Window x:Class="FloatNote.Views.ReferenceWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Референс-кадр"
+        Height="320" Width="480"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        AllowDrop="True"
+        Drop="Window_Drop"
+        DragOver="Window_DragOver">
+
+    <Border Background="{StaticResource AcrylicBackgroundBrush}"
+            BorderBrush="{StaticResource SubtleBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="10"
+            MouseLeftButtonDown="Border_MouseLeftButtonDown">
+
+        <Grid>
+            <!-- Background Image Still -->
+            <Image x:Name="ReferenceImage" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+            <!-- Placeholder if empty -->
+            <StackPanel x:Name="PlaceholderPanel" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="🖼" FontSize="32" HorizontalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"/>
+                <TextBlock Text="Перетащите референс сюда или нажмите ⌘V / Ctrl+V" 
+                           Foreground="{StaticResource TextSecondaryBrush}" 
+                           FontSize="12" 
+                           Margin="0,8,0,0"/>
+            </StackPanel>
+
+            <!-- Top Controls HUD -->
+            <Grid VerticalAlignment="Top" Margin="8" Background="#40000000">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="Референс HUD" Foreground="White" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="6,0,0,0"/>
+
+                <!-- Opacity Slider -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="Прозрачность:" Foreground="#CCFFFFFF" FontSize="10" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <Slider x:Name="OpacitySlider" Width="100" Minimum="0.1" Maximum="1.0" Value="0.85" ValueChanged="OpacitySlider_ValueChanged"/>
+                </StackPanel>
+
+                <!-- Actions -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button x:Name="LockBtn" Click="Lock_Click" Content="🔒" Width="24" Height="22" Background="Transparent" Foreground="White" BorderThickness="0" ToolTip="Сквозной клик (Lock)" Cursor="Hand"/>
+                    <Button Click="Close_Click" Content="✕" Width="24" Height="22" Background="Transparent" Foreground="White" BorderThickness="0" ToolTip="Закрыть" Cursor="Hand"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
