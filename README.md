@@ -96,17 +96,66 @@
 
 ### 🔌 Плагин для DaVinci Resolve Studio & Free
 
-В папке `Plugins/DaVinciResolve/` находится официальный Python-мост (`FloatNote_Bridge.py`), использующий DaVinci Resolve Scripting API:
-- Считывание текущего таймкода плейхеда DaVinci.
-- Прыжок курсора воспроизведения на указанный таймкод (`SetCurrentTimecode`).
-- Создание цветных маркеров на таймлайне с комментариями (`AddMarker`).
+В папке `Plugins/DaVinciResolve/` находится официальный Python-мост (`FloatNote_Bridge.py`), использующий DaVinci Resolve Scripting API.
 
-**Установка плагина в 1 клик:**
+#### Шаг 1 — Установка плагина
+
+Открой Терминал и выполни:
 ```bash
-cd Plugins/DaVinciResolve
+cd /path/to/FloatNote/Plugins/DaVinciResolve
+chmod +x install.sh
 ./install.sh
 ```
-После установки скрипт появляется в меню DaVinci Resolve: **Workspace → Scripts → Utility → FloatNote_Bridge**.
+
+Либо вручную скопируй скрипт в папку скриптов DaVinci Resolve:
+```bash
+cp FloatNote_Bridge.py "$HOME/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility/"
+```
+
+> ⚠️ **Важно:** DaVinci Resolve должен быть **закрыт** во время копирования файла.
+
+#### Шаг 2 — Проверка установки
+
+1. Запусти **DaVinci Resolve**.
+2. Открой любой проект с таймлайном.
+3. В верхнем меню перейди: **Workspace → Scripts → Utility → FloatNote_Bridge**
+4. Если скрипт появился в меню — установка прошла успешно ✅
+
+> 💡 Пункт меню называется **FloatNote_Bridge** (без пробела). Если не появился — убедись, что DaVinci был **перезапущен** после копирования файла.
+
+#### Шаг 3 — Синхронизация маркеров
+
+1. Запусти **FloatNote** (или убедись, что он уже запущен).
+2. В DaVinci Resolve выбери: **Workspace → Scripts → Utility → FloatNote_Bridge**
+3. Плагин считает все маркеры текущего таймлайна и добавит их в чеклист FloatNote в формате `[01:00:15:00] Название маркера`.
+
+#### Шаг 4 — Работа с таймкодами
+
+Таймкод-бейджи `[01:00:15:00]` в чеклисте FloatNote **кликабельны** — один клик копирует таймкод в буфер обмена. Затем:
+
+1. В DaVinci Resolve нажми `⌘ P` (или кликни на поле таймкода в панели воспроизведения).
+2. Нажми `⌘ V` для вставки и `Enter` — плейхед прыгнет на нужный кадр.
+
+#### CLI-режим (дополнительно)
+
+```bash
+# Информация о проекте и таймлайне
+python3 FloatNote_Bridge.py info
+
+# Текущий таймкод плейхеда
+python3 FloatNote_Bridge.py get_tc
+
+# Переместить плейхед к таймкоду
+python3 FloatNote_Bridge.py jump 01:02:30:12
+
+# Поставить маркер на таймлайн
+python3 FloatNote_Bridge.py marker 01:02:30:12 Cyan "Правка" "Проверить звук"
+
+# Синхронизировать маркеры таймлайна → чеклист FloatNote
+python3 FloatNote_Bridge.py sync_markers
+```
+
+Подробнее — см. [`Plugins/DaVinciResolve/README.md`](Plugins/DaVinciResolve/README.md).
 
 ---
 
