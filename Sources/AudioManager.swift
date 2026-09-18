@@ -265,4 +265,70 @@ final class AudioManager: NSObject, ObservableObject, AVAudioRecorderDelegate, A
         let secs = s % 60
         return String(format: "%02d:%02d", mins, secs)
     }
+    
+    // MARK: - SFX Generator (Censor Beep 1000Hz & Test Tones)
+    func generateCensorBeepWav() -> URL? {
+        let fileURL = audioFolderURL.appendingPathComponent("FloatNote_Censor_Beep_1000Hz.wav")
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            return fileURL
+        }
+        
+        let sampleRate: Double = 44100.0
+        let duration: Double = 1.0 // 1 second
+        let frequency: Double = 1000.0 // 1000 Hz
+        let totalSamples = Int(sampleRate * duration)
+        
+        var audioData = Data()
+        // Generate 16-bit PCM Sine Wave at -18 dBFS (approx amplitude 0.125)
+        let amplitude: Double = 0.25 * Double(Int16.max)
+        for i in 0..<totalSamples {
+            let value = sin(2.0 * .pi * frequency * Double(i) / sampleRate) * amplitude
+            var sample = Int16(value)
+            withUnsafeBytes(of: &sample) { audioData.append(contentsOf: $0) }
+        }
+        
+        // Build WAV Header
+        var header = Data()
+        header.append("RIFF".data(using: .ascii)!)
+        var chunkSize = UInt32(36 + audioData.count)
+        withUnsafeBytes(of: &chunkSize) { header.append(contentsOf: $0) }
+        header.append("WAVEfmt ".data(using: .ascii)!)
+        
+        var subchunk1Size: UInt32 = 16
+        var audioFormat: UInt16 = 1 // PCM
+        var numChannels: UInt16 = 1 // Mono
+        var sampleRateUInt32 = UInt32(sampleRate)
+        var byteRate = UInt32(sampleRate * 1 * 2)
+        var blockAlign: UInt16 = 2
+        var bitsPerSample: UInt16 = 16
+        
+        withUnsafeBytes(of: &subchunk1Size) { header.append(contentsOf: $0) }
+        withUnsafeBytes(of: &audioFormat) { header.append(contentsOf: $0) }
+        withUnsafeBytes(of: &numChannels) { header.append(contentsOf: $0) }
+        withUnsafeBytes(of: &sampleRateUInt32) { header.append(contentsOf: $0) }
+        withUnsafeBytes(of: &byteRate) { header.append(contentsOf: $0) }
+        withUnsafeBytes(of: &blockAlign) { header.append(contentsOf: $0) }
+        withUnsafeBytes(of: &bitsPerSample) { header.append(contentsOf: $0) }
+        
+        header.append("data".data(using: .ascii)!)
+        var subchunk2Size = UInt32(audioData.count)
+        withUnsafeBytes(of: &subchunk2Size) { header.append(contentsOf: $0) }
+        
+        var fullWav = Data()
+        fullWav.append(header)
+        fullWav.append(audioData)
+        
+        do {
+            try fullWav.write(to: fileURL)
+            return fileURL
+        } catch {
+            return nil
+        }
+    }
+    
+    func playBeep() {
+        if let url = generateCensorBeepWav() {
+            play(url: url)
+        }
+    }
 }

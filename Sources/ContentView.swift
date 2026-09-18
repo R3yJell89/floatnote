@@ -144,6 +144,7 @@ struct ContentView: View {
     @ObservedObject var timerPanel = TimerPanelManager.shared
     @ObservedObject var clipboardPanel = ClipboardPanelManager.shared
     @ObservedObject var safeAreas = SafeAreasManager.shared
+    @ObservedObject var referenceManager = ReferenceManager.shared
     @ObservedObject var speech = SpeechDictationManager.shared
     
     @State private var newTaskText: String = ""
@@ -428,12 +429,12 @@ struct ContentView: View {
                 // 9:16 Safe Areas
                 Button(action: { safeAreas.toggle() }) {
                     HStack(spacing: 3) {
-                        Image(systemName: "rectangle.portrait.split.2x1")
+                        Image(systemName: "rectangle.split.3x3")
                             .font(.system(size: 9))
-                        Text("9:16 Зоны")
+                        Text(safeAreas.mode == .vertical ? "9:16 Зоны" : "16:9 Сетка")
                             .font(.system(size: 10, weight: .semibold))
                     }
-                    .padding(.horizontal, 6)
+                    .padding(.horizontal, 5)
                     .padding(.vertical, 3)
                     .background(safeAreas.isVisible ? Color.cyan.opacity(0.3) : Color.white.opacity(0.06))
                     .foregroundColor(safeAreas.isVisible ? .cyan : .white.opacity(0.8))
@@ -444,7 +445,28 @@ struct ContentView: View {
                     )
                 }
                 .buttonStyle(.plain)
-                .help("Сетка безопасных зон 9:16 (Reels / TikTok / Shorts)")
+                .help("Сетка безопасных зон 9:16 / 16:9 и шпаргалка платформ")
+                
+                // Reference Overlay companion window
+                Button(action: { referenceManager.toggle() }) {
+                    HStack(spacing: 2) {
+                        Image(systemName: "photo")
+                            .font(.system(size: 9))
+                        Text("Референс")
+                            .font(.system(size: 10, weight: .semibold))
+                    }
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 3)
+                    .background(referenceManager.isVisible ? Color.purple.opacity(0.3) : Color.white.opacity(0.06))
+                    .foregroundColor(referenceManager.isVisible ? .purple : .white.opacity(0.8))
+                    .cornerRadius(4)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4)
+                            .stroke(referenceManager.isVisible ? Color.purple.opacity(0.6) : Color.clear, lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+                .help("Открыть плавающее окно референса поверх вьювера монтажки")
                 
                 // Timer companion window
                 Button(action: { timerPanel.toggle() }) {
@@ -807,20 +829,48 @@ struct ContentView: View {
                 .foregroundColor(item.wrappedValue.isCompleted ? .white.opacity(0.4) : .white)
                 .strikethrough(item.wrappedValue.isCompleted, color: .white.opacity(0.4))
             
-            // Clickable Timecode Badge (Copies TC to clipboard & jumps DaVinci playhead if bridge installed)
+            // Clickable Timecode Badge (Copies TC to clipboard & jumps active NLE playhead)
             if let tc = tc {
                 Button(action: {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(tc, forType: .string)
                     
-                    // Trigger DaVinci Jump via installed Bridge in background
+                    let targetNLE = storage.preferences.targetNLE
+                    
                     DispatchQueue.global(qos: .userInitiated).async {
-                        let scriptPath = NSString(string: "~/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility/FloatNote_Bridge.py").expandingTildeInPath
-                        if FileManager.default.fileExists(atPath: scriptPath) {
-                            let proc = Process()
-                            proc.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
-                            proc.arguments = [scriptPath, "jump", tc]
-                            try? proc.run()
+                        switch targetNLE {
+                        case .davinci:
+                            let scriptPath = NSString(string: "~/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility/FloatNote_Bridge.py").expandingTildeInPath
+                            if FileManager.default.fileExists(atPath: scriptPath) {
+                                let proc = Process()
+                                proc.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
+                                proc.arguments = [scriptPath, "jump", tc]
+                                try? proc.run()
+                            }
+                        case .finalcut:
+                            // AppleScript: Activate Final Cut Pro & press Control+P (Jump to timecode)
+                            let scriptSource = """
+                            tell application "Final Cut Pro" to activate
+                            tell application "System Events"
+                                keystroke "p" using {control down}
+                                delay 0.05
+                                keystroke "v" using {command down}
+                                key code 36
+                            end tell
+                            """
+                            if let appleScript = NSAppleScript(source: scriptSource) {
+                                var error: NSDictionary?
+                                appleScript.executeAndReturnError(&error)
+                            }
+                        case .premiere:
+                            // AppleScript: Activate Premiere Pro
+                            let scriptSource = """
+                            tell application "Adobe Premiere Pro" to activate
+                            """
+                            if let appleScript = NSAppleScript(source: scriptSource) {
+                                var error: NSDictionary?
+                                appleScript.executeAndReturnError(&error)
+                            }
                         }
                     }
                 }) {
@@ -1114,6 +1164,65 @@ struct AudioNotesView: View {
                     .padding(.horizontal, 10)
                     .padding(.vertical, 8)
                 }
+            }
+            
+            // SFX & Audio Utilities Bar (Censor Beep 1000Hz + Target LUFS)
+            VStack(spacing: 4) {
+                Divider().background(Color.white.opacity(0.1))
+                HStack(spacing: 8) {
+                    Image(systemName: "waveform.path.badge.plus")
+                        .font(.system(size: 11))
+                        .foregroundColor(.yellow)
+                    
+                    Text("Цензурный BEEP 1000Hz")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.white.opacity(0.85))
+                    
+                    Spacer()
+                    
+                    // Play test tone
+                    Button(action: {
+                        audioManager.playBeep()
+                    }) {
+                        HStack(spacing: 3) {
+                            Image(systemName: "speaker.wave.2.fill")
+                                .font(.system(size: 8))
+                            Text("Тест")
+                                .font(.system(size: 9, weight: .bold))
+                        }
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.yellow.opacity(0.2))
+                        .foregroundColor(.yellow)
+                        .cornerRadius(4)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Прослушать 1-секундный тон цензуры 1000 Гц (-18 dBFS)")
+                    
+                    // Drag / Reveal to Finder
+                    Button(action: {
+                        if let url = audioManager.generateCensorBeepWav() {
+                            NSWorkspace.shared.activateFileViewerSelecting([url])
+                        }
+                    }) {
+                        HStack(spacing: 3) {
+                            Image(systemName: "arrow.down.doc.fill")
+                                .font(.system(size: 8))
+                            Text("Файл WAV")
+                                .font(.system(size: 9, weight: .bold))
+                        }
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.white.opacity(0.12))
+                        .foregroundColor(.white)
+                        .cornerRadius(4)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Показать WAV-файл в Finder (можно перетащить на таймлайн)")
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(Color.black.opacity(0.25))
             }
         }
     }

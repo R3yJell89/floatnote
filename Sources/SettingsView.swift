@@ -61,6 +61,28 @@ struct SettingsView: View {
             
             Divider()
             
+            // Target NLE Section
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Основной видеоредактор (NLE)")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                
+                Picker("", selection: $storage.preferences.targetNLE) {
+                    ForEach(TargetNLE.allCases) { nle in
+                        Label(nle.rawValue, systemImage: nle.iconName).tag(nle)
+                    }
+                }
+                .pickerStyle(.segmented)
+                
+                Text(nleDescription(for: storage.preferences.targetNLE))
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+            .padding(12)
+            .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
+            .cornerRadius(8)
+            
             // Window Behavior / Pinning Section
             VStack(alignment: .leading, spacing: 8) {
                 Text("Поведение окна")
@@ -259,6 +281,17 @@ struct SettingsView: View {
         storage.preferences.fontSize = 14.0
         loadCurrentSettings()
         HotkeyManager.shared.updateHotkeys(from: storage.preferences)
+    }
+    
+    private func nleDescription(for nle: TargetNLE) -> String {
+        switch nle {
+        case .davinci:
+            return "DaVinci Resolve: Live-опрос плейхеда, авто-прыжок по таймкодам и импорт маркеров через Python Bridge."
+        case .premiere:
+            return "Premiere Pro: Экспорт маркеров секвенса в чеклист через ExtendScript (FloatNote_Premiere.jsx)."
+        case .finalcut:
+            return "Final Cut Pro: Экспорт задач в FCPXML 1.10 с маркерами и авто-вставка таймкода по клику."
+        }
     }
 }
 

@@ -74,6 +74,7 @@ swiftc -O -sdk "$SDK_PATH" \
     "$DIR/Sources/AudioManager.swift" \
     "$DIR/Sources/DrawingCanvasView.swift" \
     "$DIR/Sources/SafeAreasOverlay.swift" \
+    "$DIR/Sources/ReferenceOverlay.swift" \
     "$DIR/Sources/ChecklistTemplates.swift" \
     "$DIR/Sources/TimerWindow.swift" \
     "$DIR/Sources/ClipboardManager.swift" \

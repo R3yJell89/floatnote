@@ -28,6 +28,22 @@ struct HotkeyConfig: Codable, Equatable {
     )
 }
 
+enum TargetNLE: String, Codable, CaseIterable, Identifiable {
+    case davinci = "DaVinci Resolve"
+    case premiere = "Premiere Pro"
+    case finalcut = "Final Cut Pro"
+    
+    var id: String { self.rawValue }
+    
+    var iconName: String {
+        switch self {
+        case .davinci: return "dial.low.fill"
+        case .premiere: return "film"
+        case .finalcut: return "scissors"
+        }
+    }
+}
+
 struct AppPreferences: Codable {
     var opacity: Double = 0.92
     var fontSize: Double = 14.0
@@ -40,11 +56,12 @@ struct AppPreferences: Codable {
     var windowHeight: Double = 480.0
     var isClickThrough: Bool = false
     var isPinned: Bool = true
+    var targetNLE: TargetNLE = .davinci
     
     enum CodingKeys: String, CodingKey {
         case opacity, fontSize, toggleWindowHotkey, toggleGhostHotkey
         case selectedTab, windowX, windowY, windowWidth, windowHeight
-        case isClickThrough, isPinned
+        case isClickThrough, isPinned, targetNLE
     }
     
     init() {}
@@ -62,6 +79,7 @@ struct AppPreferences: Codable {
         windowHeight = try container.decodeIfPresent(Double.self, forKey: .windowHeight) ?? 480.0
         isClickThrough = try container.decodeIfPresent(Bool.self, forKey: .isClickThrough) ?? false
         isPinned = try container.decodeIfPresent(Bool.self, forKey: .isPinned) ?? true
+        targetNLE = try container.decodeIfPresent(TargetNLE.self, forKey: .targetNLE) ?? .davinci
     }
 }
 
