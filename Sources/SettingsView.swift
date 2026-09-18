@@ -80,7 +80,7 @@ struct SettingsView: View {
                     .foregroundColor(.secondary)
                 
                 if storage.preferences.targetNLE == .davinci {
-                    Toggle("Автоматически создавать маркер в DaVinci при добавлении задачи с таймкодом", isOn: $storage.preferences.autoCreateMarkers)
+                    Toggle("Автосоздание маркера в DaVinci при добавлении задачи", isOn: $storage.preferences.autoCreateMarkers)
                         .toggleStyle(SwitchToggleStyle(tint: Color(red: 0.18, green: 0.78, blue: 0.35)))
                         .font(.caption)
                 }

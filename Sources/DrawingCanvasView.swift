@@ -604,6 +604,32 @@ struct DrawingCanvasView: View {
                             }
                     )
                     
+                    // Bottom signature watermark overlay
+                    VStack {
+                        Spacer()
+                        HStack(spacing: 6) {
+                            Image(systemName: "heart.fill")
+                                .font(.system(size: 11))
+                                .foregroundColor(Color(red: 1.0, green: 0.35, blue: 0.45))
+                            Text("с любовью by R3yJell")
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                .foregroundColor(.white.opacity(0.92))
+                                .shadow(color: .black.opacity(0.6), radius: 3, x: 0, y: 1)
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 6)
+                        .background(
+                            Capsule()
+                                .fill(Color.black.opacity(0.45))
+                                .overlay(
+                                    Capsule()
+                                        .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                                )
+                        )
+                        .padding(.bottom, 16)
+                    }
+                    .allowsHitTesting(false)
+                    
                     // Notification Banner
                     if let msg = saveMessage {
                         VStack {
@@ -621,6 +647,9 @@ struct DrawingCanvasView: View {
                 }
                 .onAppear {
                     canvasSize = geo.size
+                    if strokes.isEmpty {
+                        loadInitialArtwork(width: geo.size.width > 50 ? geo.size.width : 475, height: geo.size.height > 50 ? geo.size.height : 360)
+                    }
                 }
                 .modifier(OnChangeCanvasSizeModifier(size: geo.size, onChanged: { newSize in
                     canvasSize = newSize
@@ -702,6 +731,46 @@ struct DrawingCanvasView: View {
                 }
             }
         }
+    }
+    
+    private func loadInitialArtwork(width: CGFloat, height: CGFloat) {
+        guard strokes.isEmpty else { return }
+        
+        let cx = width / 2
+        let cy = height * 0.38
+        let scale = min(width, height) * 0.024
+        
+        var heartPoints: [CGPoint] = []
+        let steps = 120
+        for i in 0...steps {
+            let t = (Double(i) / Double(steps)) * 2 * Double.pi
+            let x = 16 * pow(sin(t), 3)
+            let y = -(13 * cos(t) - 5 * cos(2 * t) - 2 * cos(3 * t) - cos(4 * t))
+            heartPoints.append(CGPoint(x: cx + CGFloat(x) * scale, y: cy + CGFloat(y) * scale))
+        }
+        
+        var newStrokes: [DrawingStroke] = []
+        
+        // Concentric filled rings to form a solid bright red heart
+        let ringSteps = 16
+        for r in stride(from: 1, through: ringSteps, by: 1) {
+            let s = scale * (CGFloat(r) / CGFloat(ringSteps))
+            var ring: [CGPoint] = []
+            for i in 0...steps {
+                let t = (Double(i) / Double(steps)) * 2 * Double.pi
+                let x = 16 * pow(sin(t), 3)
+                let y = -(13 * cos(t) - 5 * cos(2 * t) - 2 * cos(3 * t) - cos(4 * t))
+                ring.append(CGPoint(x: cx + CGFloat(x) * s, y: cy + CGFloat(y) * s))
+            }
+            newStrokes.append(DrawingStroke(
+                tool: .pen,
+                points: ring,
+                color: Color(red: 0.95, green: 0.15, blue: 0.22),
+                lineWidth: 8
+            ))
+        }
+        
+        self.strokes = newStrokes
     }
 }
 

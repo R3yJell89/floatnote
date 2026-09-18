@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.1.0-brightgreen.svg" alt="Version 1.1.0">
+  <img src="https://img.shields.io/badge/version-1.2-brightgreen.svg" alt="Version 1.2">
   <img src="https://img.shields.io/badge/platform-macOS%2013.0+-blue.svg" alt="macOS 13.0+">
   <img src="https://img.shields.io/badge/Swift-6.0-orange.svg" alt="Swift 6">
   <img src="https://img.shields.io/badge/DaVinci%20Resolve-Companion%20Plugin-ff69b4.svg" alt="DaVinci Plugin">
