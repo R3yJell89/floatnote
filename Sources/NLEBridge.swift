@@ -97,4 +97,48 @@ struct NLEBridge {
             }
         }
     }
+    
+    /// Cleans timecode and brackets from task text to produce a clean marker title
+    static func cleanMarkerTitle(from text: String) -> String {
+        var clean = text.replacingOccurrences(of: #"\[\d{2}:\d{2}:\d{2}[:;]\d{2}\]"#, with: "", options: .regularExpression)
+        clean = clean.replacingOccurrences(of: #"\b\d{2}:\d{2}:\d{2}[:;]\d{2}\b"#, with: "", options: .regularExpression)
+        clean = clean.trimmingCharacters(in: .whitespacesAndNewlines)
+        if clean.hasPrefix("-") || clean.hasPrefix("—") || clean.hasPrefix(":") {
+            clean = String(clean.dropFirst()).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return clean.isEmpty ? "FloatNote Task" : clean
+    }
+    
+    /// Adds a marker to the active timeline in DaVinci Resolve at the given timecode
+    static func addMarkerToNLE(timecode: String, name: String, note: String = "FloatNote", color: String = "Blue", completion: ((Bool) -> Void)? = nil) {
+        let scriptPath = NSString(string: "~/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility/FloatNote_Bridge.py").expandingTildeInPath
+        guard FileManager.default.fileExists(atPath: scriptPath) else {
+            completion?(false)
+            return
+        }
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            let proc = Process()
+            proc.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
+            proc.arguments = [scriptPath, "marker", timecode, color, name, note]
+            let pipe = Pipe()
+            proc.standardOutput = pipe
+            proc.standardError = Pipe()
+            
+            var success = false
+            do {
+                try proc.run()
+                proc.waitUntilExit()
+                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let ok = json["success"] as? Bool {
+                    success = ok
+                }
+            } catch {}
+            
+            DispatchQueue.main.async {
+                completion?(success)
+            }
+        }
+    }
 }

@@ -172,10 +172,21 @@ struct ChecklistView: View {
         }
     }
     
+    @State private var justMarkedId: UUID? = nil
+    
     private func addNewTask() {
         let trimmed = newTaskText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        storage.items.append(ChecklistItem(text: trimmed, isCompleted: false))
+        let newItem = ChecklistItem(text: trimmed, isCompleted: false)
+        storage.items.append(newItem)
+        
+        // Reverse Marker: if task contains a timecode and user is on DaVinci with autoCreateMarkers enabled
+        if storage.preferences.targetNLE == .davinci && storage.preferences.autoCreateMarkers,
+           let tc = NLEBridge.extractTimecode(from: trimmed) {
+            let markerTitle = NLEBridge.cleanMarkerTitle(from: trimmed)
+            NLEBridge.addMarkerToNLE(timecode: tc, name: markerTitle, note: "FloatNote Task", color: "Blue")
+        }
+        
         newTaskText = ""
         isNewTaskFocused = true
     }
@@ -249,6 +260,40 @@ struct ChecklistView: View {
                 }
                 .buttonStyle(.plain)
                 .help("Перейти к кадру \(tc) в монтажке и скопировать в буфер")
+                
+                // Add / Sync Marker Button to DaVinci Resolve
+                if storage.preferences.targetNLE == .davinci {
+                    Button(action: {
+                        let markerTitle = NLEBridge.cleanMarkerTitle(from: item.wrappedValue.text)
+                        NLEBridge.addMarkerToNLE(timecode: tc, name: markerTitle, note: "FloatNote: \(item.wrappedValue.text)", color: "Cyan") { ok in
+                            if ok {
+                                withAnimation {
+                                    justMarkedId = item.wrappedValue.id
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
+                                    if justMarkedId == item.wrappedValue.id {
+                                        withAnimation {
+                                            justMarkedId = nil
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(justMarkedId == item.wrappedValue.id ? Color.green.opacity(0.3) : Color.white.opacity(0.08))
+                            Image(systemName: justMarkedId == item.wrappedValue.id ? "checkmark" : "mappin.circle.fill")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundColor(justMarkedId == item.wrappedValue.id ? .green : .cyan)
+                        }
+                        .frame(width: 20, height: 20)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .contentShape(Rectangle())
+                    .help(justMarkedId == item.wrappedValue.id ? "Маркер установлен на таймлайн!" : "Поставить маркер на таймлайн DaVinci Resolve в точку \(tc)")
+                }
             }
             
             Button(action: {

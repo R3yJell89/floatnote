@@ -57,11 +57,12 @@ struct AppPreferences: Codable {
     var isClickThrough: Bool = false
     var isPinned: Bool = true
     var targetNLE: TargetNLE = .davinci
+    var autoCreateMarkers: Bool = true
     
     enum CodingKeys: String, CodingKey {
         case opacity, fontSize, toggleWindowHotkey, toggleGhostHotkey
         case selectedTab, windowX, windowY, windowWidth, windowHeight
-        case isClickThrough, isPinned, targetNLE
+        case isClickThrough, isPinned, targetNLE, autoCreateMarkers
     }
     
     init() {}
@@ -80,6 +81,7 @@ struct AppPreferences: Codable {
         isClickThrough = try container.decodeIfPresent(Bool.self, forKey: .isClickThrough) ?? false
         isPinned = try container.decodeIfPresent(Bool.self, forKey: .isPinned) ?? true
         targetNLE = try container.decodeIfPresent(TargetNLE.self, forKey: .targetNLE) ?? .davinci
+        autoCreateMarkers = try container.decodeIfPresent(Bool.self, forKey: .autoCreateMarkers) ?? true
     }
 }
 
