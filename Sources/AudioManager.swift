@@ -32,7 +32,7 @@ final class AudioManager: NSObject, ObservableObject, AVAudioRecorderDelegate, A
     private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "ru-RU")) ?? SFSpeechRecognizer()
     
     override init() {
-        let baseDir = URL(fileURLWithPath: "/Users/r3yjell/Documents/Давинчи/FloatNote_Files")
+        let baseDir = AppConstants.filesDirectory
         let voiceDir = baseDir.appendingPathComponent("Голосовые заметки", isDirectory: true)
         let sfxDir = baseDir.appendingPathComponent("Звуковые эффекты", isDirectory: true)
         let notesDir = baseDir.appendingPathComponent("Заметки", isDirectory: true)

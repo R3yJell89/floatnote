@@ -112,7 +112,7 @@ final class SketchManager: ObservableObject {
     let sketchesFolderURL: URL
     
     init() {
-        let baseDir = URL(fileURLWithPath: "/Users/r3yjell/Documents/Давинчи/FloatNote_Files/Скетчи")
+        let baseDir = AppConstants.filesDirectory.appendingPathComponent("Скетчи", isDirectory: true)
         try? FileManager.default.createDirectory(at: baseDir, withIntermediateDirectories: true)
         self.sketchesFolderURL = baseDir
         loadSketches()

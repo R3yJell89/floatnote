@@ -83,6 +83,19 @@ struct AppPreferences: Codable {
     }
 }
 
+// MARK: - App Constants & Directory Paths
+
+struct AppConstants {
+    /// Shared user directory for exported notes, recordings, sound effects, and sketches
+    static let filesDirectory: URL = {
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let davinci = docs.appendingPathComponent("Давинчи", isDirectory: true)
+        let base = davinci.appendingPathComponent("FloatNote_Files", isDirectory: true)
+        try? FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
+        return base
+    }()
+}
+
 // MARK: - Storage Manager
 
 final class StorageManager: ObservableObject {

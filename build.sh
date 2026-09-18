@@ -71,11 +71,16 @@ swiftc -O -sdk "$SDK_PATH" \
     "$DIR/Sources/HotkeyManager.swift" \
     "$DIR/Sources/FloatingPanel.swift" \
     "$DIR/Sources/SettingsView.swift" \
+    "$DIR/Sources/UIComponents.swift" \
     "$DIR/Sources/AudioManager.swift" \
+    "$DIR/Sources/AudioNotesView.swift" \
     "$DIR/Sources/DrawingCanvasView.swift" \
     "$DIR/Sources/SafeAreasOverlay.swift" \
     "$DIR/Sources/ReferenceOverlay.swift" \
+    "$DIR/Sources/NLEBridge.swift" \
     "$DIR/Sources/ChecklistTemplates.swift" \
+    "$DIR/Sources/ChecklistView.swift" \
+    "$DIR/Sources/NotesView.swift" \
     "$DIR/Sources/TimerWindow.swift" \
     "$DIR/Sources/ClipboardManager.swift" \
     "$DIR/Sources/SpeechManager.swift" \
