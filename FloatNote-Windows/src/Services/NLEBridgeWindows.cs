@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
+using FloatNote.Utils;
 
 namespace FloatNote.Services;
 
