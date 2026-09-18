@@ -1,0 +1,29 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# Build Artifacts
+FloatNote.app/
+*.dSYM/
+*.o
+*.swiftdoc
+*.swiftmodule
+*.swiftsourceinfo
+/tmp/
+
+# User Data & Cache
+FloatNote_Files/
+*.m4a
+*.png
+*.wav
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.xcodeproj/
+*.xcworkspace/
