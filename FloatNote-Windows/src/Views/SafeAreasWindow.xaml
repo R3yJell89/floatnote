@@ -7,28 +7,52 @@
         AllowsTransparency="True"
         Background="Transparent"
         Topmost="True"
-        ShowInTaskbar="False">
+        ShowInTaskbar="False"
+        KeyDown="Window_KeyDown">
 
-    <Grid Background="#01000000">
-        <!-- Close / Lock Controls at top right -->
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="24">
-            <Button x:Name="LockBtn" Click="Lock_Click" Content="🔒 Lock Click" Padding="8,4" Background="#33FFFFFF" Foreground="White" BorderThickness="0" Margin="0,0,8,0" Cursor="Hand"/>
-            <Button Click="Close_Click" Content="✕" Width="28" Height="28" Background="#33FFFFFF" Foreground="White" BorderThickness="0" Cursor="Hand"/>
-        </StackPanel>
+    <!-- Root Grid with NO background so clicks pass through empty areas by default -->
+    <Grid Background="Transparent">
+        <!-- Floating HUD Header Controls (Always on top right) -->
+        <Border Background="#D0181818" 
+                BorderBrush="#33FFFFFF" 
+                BorderThickness="1" 
+                CornerRadius="8" 
+                HorizontalAlignment="Right" 
+                VerticalAlignment="Top" 
+                Margin="24" 
+                Padding="8,6">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="📐 Безопасные зоны" Foreground="White" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="4,0,12,0"/>
+                <Button x:Name="ModeBtn" Click="Mode_Click" Content="Режим: 9:16" Padding="8,4" Background="#22FFFFFF" Foreground="White" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0"/>
+                <Button x:Name="LockBtn" Click="Lock_Click" Content="🔒 Сквозной клик" Padding="8,4" Background="#22FFFFFF" Foreground="White" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0" ToolTip="Клик мыши сквозь оверлей (Esc для выхода)"/>
+                <Button Click="Close_Click" Content="✕ Закрыть (Esc)" Padding="8,4" Background="#FF3B30" Foreground="White" BorderThickness="0" Cursor="Hand"/>
+            </StackPanel>
+        </Border>
 
-        <!-- 9:16 Vertical Video Overlay Guide in Center -->
-        <Border Width="360" Height="640" BorderBrush="#8800FFCC" BorderThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <!-- 9:16 Guide Overlay Container (Centered) -->
+        <Border x:Name="VerticalGuide" Width="360" Height="640" BorderBrush="#CC00FFCC" BorderThickness="2" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
             <Grid>
-                <!-- Top UI Safe Area -->
-                <Border Height="80" VerticalAlignment="Top" Background="#1500FFCC" BorderBrush="#5500FFCC" BorderThickness="0,0,0,1">
-                    <TextBlock Text="Верхняя зона соцсетей (UI / Поиск)" Foreground="#AA00FFCC" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <!-- Top UI Zone (Avatar, Search, Sound) -->
+                <Border Height="90" VerticalAlignment="Top" Background="#2000FFCC" BorderBrush="#8800FFCC" BorderThickness="0,0,0,1">
+                    <TextBlock Text="Верхняя зона соцсетей (Шапка / Поиск / Звук)" Foreground="#CC00FFCC" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
-                <!-- Bottom UI Safe Area -->
-                <Border Height="140" VerticalAlignment="Bottom" Background="#1500FFCC" BorderBrush="#5500FFCC" BorderThickness="0,1,0,0">
-                    <TextBlock Text="Нижняя зона (Титры / Описание)" Foreground="#AA00FFCC" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <!-- Bottom UI Zone (Caption, Music Title) -->
+                <Border Height="140" VerticalAlignment="Bottom" Background="#2000FFCC" BorderBrush="#8800FFCC" BorderThickness="0,1,0,0">
+                    <TextBlock Text="Нижняя зона (Титры / Описание / Кнопки)" Foreground="#CC00FFCC" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
-                <!-- Center Target -->
-                <TextBlock Text="9:16 Action Safe" Foreground="#5500FFCC" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <!-- Center Safe Title -->
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="9:16 Action Safe" Foreground="#AA00FFCC" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Reels • TikTok • Shorts" Foreground="#8800FFCC" FontSize="11" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 16:9 Guide Overlay Container (Optional) -->
+        <Border x:Name="HorizontalGuide" Width="854" Height="480" BorderBrush="#CCFFCC00" BorderThickness="2" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" IsHitTestVisible="False">
+            <Grid>
+                <Border Margin="42,24" BorderBrush="#88FFCC00" BorderThickness="1"/>
+                <TextBlock Text="16:9 Title &amp; Action Safe" Foreground="#AAFFCC00" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
         </Border>
     </Grid>
