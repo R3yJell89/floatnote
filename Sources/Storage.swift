@@ -99,6 +99,44 @@ final class StorageManager: ObservableObject {
         prefsFileURL = appSupportURL.appendingPathComponent("preferences.json")
         
         loadAll()
+        startWatchingChecklist()
+    }
+    
+    private var fileWatcherSource: DispatchSourceFileSystemObject?
+    private var isWritingInternally: Bool = false
+    
+    func startWatchingChecklist() {
+        let fd = open(itemsFileURL.path, O_EVTONLY)
+        guard fd >= 0 else { return }
+        
+        let source = DispatchSource.makeFileSystemObjectSource(
+            fileDescriptor: fd,
+            eventMask: [.write, .extend, .attrib, .rename],
+            queue: DispatchQueue.main
+        )
+        
+        source.setEventHandler { [weak self] in
+            guard let self = self else { return }
+            if self.isWritingInternally { return }
+            self.reloadChecklistFromFile()
+        }
+        
+        source.setCancelHandler {
+            close(fd)
+        }
+        
+        source.resume()
+        self.fileWatcherSource = source
+    }
+    
+    func reloadChecklistFromFile() {
+        guard let data = try? Data(contentsOf: itemsFileURL),
+              let loadedItems = try? JSONDecoder().decode([ChecklistItem].self, from: data) else {
+            return
+        }
+        if loadedItems != self.items {
+            self.items = loadedItems
+        }
     }
     
     func loadAll() {
@@ -130,8 +168,12 @@ final class StorageManager: ObservableObject {
     }
     
     private func saveItems() {
+        isWritingInternally = true
         if let data = try? JSONEncoder().encode(items) {
             try? data.write(to: itemsFileURL)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.isWritingInternally = false
         }
     }
     

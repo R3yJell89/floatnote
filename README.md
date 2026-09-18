@@ -94,47 +94,31 @@
 
 ---
 
-### 🔌 Плагин для DaVinci Resolve Studio & Free
+### 🔌 Интеграция с DaVinci Resolve & Adobe Premiere Pro
 
-В папке `Plugins/DaVinciResolve/` находится официальный Python-мост (`FloatNote_Bridge.py`), использующий DaVinci Resolve Scripting API.
+FloatNote поддерживает мгновенную синхронизацию маркеров таймлайна и управление воспроизведением для **DaVinci Resolve** и **Adobe Premiere Pro**.
 
-#### Шаг 1 — Установка плагина
+#### ⚡ Автоматическая установка плагинов в 1 команду
 
-Открой Терминал и выполни:
+В терминале выполни:
 ```bash
-cd /path/to/FloatNote/Plugins/DaVinciResolve
-chmod +x install.sh
-./install.sh
+./Plugins/install_all.sh
 ```
+Скрипт автоматически найдет установленные в системе видеоредакторы и проставит нужные модули расширения:
+- **DaVinci Resolve**: устанавливает `FloatNote_Bridge.py` в системную папку Fusion Scripts.
+- **Adobe Premiere Pro**: устанавливает `FloatNote_Premiere.jsx` в скрипты Premiere.
 
-Либо вручную скопируй скрипт в папку скриптов DaVinci Resolve:
-```bash
-cp FloatNote_Bridge.py "$HOME/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility/"
-```
+---
 
-> ⚠️ **Важно:** DaVinci Resolve должен быть **закрыт** во время копирования файла.
+#### 🎬 Использование в DaVinci Resolve (Studio & Free)
+1. В верхнем меню DaVinci выбери: **Workspace → Scripts → Utility → FloatNote_Bridge**.
+2. Все маркеры текущего таймлайна с их названиями, комментариями и точными таймкодами мгновенно появятся в чеклисте FloatNote на лету!
+3. **Авто-переход к кадру**: при клике на бейдж таймкода `[01:00:15:00]` в чеклисте FloatNote плейхед в DaVinci **автоматически прыгает на этот кадр** (и одновременно копирует таймкод в буфер обмена).
 
-#### Шаг 2 — Проверка установки
-
-1. Запусти **DaVinci Resolve**.
-2. Открой любой проект с таймлайном.
-3. В верхнем меню перейди: **Workspace → Scripts → Utility → FloatNote_Bridge**
-4. Если скрипт появился в меню — установка прошла успешно ✅
-
-> 💡 Пункт меню называется **FloatNote_Bridge** (без пробела). Если не появился — убедись, что DaVinci был **перезапущен** после копирования файла.
-
-#### Шаг 3 — Синхронизация маркеров
-
-1. Запусти **FloatNote** (или убедись, что он уже запущен).
-2. В DaVinci Resolve выбери: **Workspace → Scripts → Utility → FloatNote_Bridge**
-3. Плагин считает все маркеры текущего таймлайна и добавит их в чеклист FloatNote в формате `[01:00:15:00] Название маркера`.
-
-#### Шаг 4 — Работа с таймкодами
-
-Таймкод-бейджи `[01:00:15:00]` в чеклисте FloatNote **кликабельны** — один клик копирует таймкод в буфер обмена. Затем:
-
-1. В DaVinci Resolve нажми `⌘ P` (или кликни на поле таймкода в панели воспроизведения).
-2. Нажми `⌘ V` для вставки и `Enter` — плейхед прыгнет на нужный кадр.
+#### 🎞 Использование в Adobe Premiere Pro
+1. В Premiere Pro открой таймлайн с маркерами.
+2. Запусти: **File → Scripts → FloatNote_Premiere.jsx** (или через ExtendScript Toolkit).
+3. Маркеры синхронизируются в `checklist.json` и сразу отобразятся в открытом окне FloatNote.
 
 #### CLI-режим (дополнительно)
 

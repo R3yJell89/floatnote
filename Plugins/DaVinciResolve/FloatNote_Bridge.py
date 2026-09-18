@@ -119,18 +119,16 @@ def cmd_marker(resolve, target_tc, color="Blue", name="Marker", note="FloatNote"
         print(json.dumps({"success": False, "error": "No active timeline"}))
         return
     
-    start_frame = timeline.GetStartFrame()
+    start_frame = timeline.GetStartFrame() or 0
     fps = float(timeline.GetSetting("timelineFrameRate") or 24.0)
-    current_tc = timeline.GetCurrentTimecode()
     
-    current_frames = tc_to_frames(current_tc, fps)
-    target_frames = tc_to_frames(target_tc, fps)
-    
-    frame_offset = target_frames - current_frames
-    marker_frame = start_frame + frame_offset
+    target_abs_frames = tc_to_frames(target_tc, fps)
+    marker_frame = target_abs_frames - start_frame
+    if marker_frame < 0:
+        marker_frame = target_abs_frames
     
     ok = timeline.AddMarker(marker_frame, color, name, note, 1)
-    print(json.dumps({"success": bool(ok), "marker_frame": marker_frame}))
+    print(json.dumps({"success": bool(ok), "marker_frame": marker_frame, "timecode": target_tc}))
 
 def cmd_sync_markers_to_floatnote(resolve):
     """Экспорт всех маркеров текущего таймлайна в чеклист FloatNote"""
@@ -149,13 +147,13 @@ def cmd_sync_markers_to_floatnote(resolve):
         print("На текущем таймлайне нет маркеров.")
         return
     
-    start_frame = timeline.GetStartFrame()
+    start_frame = timeline.GetStartFrame() or 0
     fps = float(timeline.GetSetting("timelineFrameRate") or 24.0)
     
     new_items = []
     for frame_id, info in sorted(markers.items()):
-        offset = frame_id - start_frame
-        tc_str = frames_to_tc(offset, fps)
+        abs_frame = start_frame + frame_id
+        tc_str = frames_to_tc(abs_frame, fps)
         name = info.get("name", "Маркер")
         note = info.get("note", "")
         full_text = f"[{tc_str}] {name}" + (f" — {note}" if note else "")

@@ -769,15 +769,26 @@ struct ContentView: View {
                 .foregroundColor(item.wrappedValue.isCompleted ? .white.opacity(0.4) : .white)
                 .strikethrough(item.wrappedValue.isCompleted, color: .white.opacity(0.4))
             
-            // Clickable Timecode Badge (Copies TC to clipboard)
+            // Clickable Timecode Badge (Copies TC to clipboard & jumps DaVinci playhead if bridge installed)
             if let tc = tc {
                 Button(action: {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(tc, forType: .string)
+                    
+                    // Trigger DaVinci Jump via installed Bridge in background
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        let scriptPath = NSString(string: "~/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility/FloatNote_Bridge.py").expandingTildeInPath
+                        if FileManager.default.fileExists(atPath: scriptPath) {
+                            let proc = Process()
+                            proc.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
+                            proc.arguments = [scriptPath, "jump", tc]
+                            try? proc.run()
+                        }
+                    }
                 }) {
                     HStack(spacing: 2) {
-                        Image(systemName: "doc.on.doc")
-                            .font(.system(size: 7))
+                        Image(systemName: "arrow.right.circle.fill")
+                            .font(.system(size: 8))
                         Text(tc)
                             .font(.system(size: 10, weight: .bold, design: .monospaced))
                     }
@@ -792,7 +803,7 @@ struct ContentView: View {
                     )
                 }
                 .buttonStyle(.plain)
-                .help("Скопировать таймкод \(tc) в буфер обмена")
+                .help("Перейти к кадру \(tc) в DaVinci и скопировать в буфер")
             }
             
             Button(action: {
