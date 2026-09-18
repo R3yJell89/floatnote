@@ -26,16 +26,23 @@ final class AudioManager: NSObject, ObservableObject, AVAudioRecorderDelegate, A
     private var audioPlayer: AVAudioPlayer?
     private var recordingTimer: Timer?
     
-    let audioFolderURL: URL
+    let audioFolderURL: URL       // Папка "Голосовые заметки"
+    let sfxFolderURL: URL         // Папка "Звуковые эффекты" (SFX тоны, BEEP)
     let notesFolderURL: URL
     private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "ru-RU")) ?? SFSpeechRecognizer()
     
     override init() {
-        let baseDir = URL(fileURLWithPath: "/Users/r3yjell/Documents/Давинчи/FloatNote_Files/Аудио")
-        let notesDir = URL(fileURLWithPath: "/Users/r3yjell/Documents/Давинчи/FloatNote_Files/Заметки")
-        try? FileManager.default.createDirectory(at: baseDir, withIntermediateDirectories: true)
+        let baseDir = URL(fileURLWithPath: "/Users/r3yjell/Documents/Давинчи/FloatNote_Files")
+        let voiceDir = baseDir.appendingPathComponent("Голосовые заметки", isDirectory: true)
+        let sfxDir = baseDir.appendingPathComponent("Звуковые эффекты", isDirectory: true)
+        let notesDir = baseDir.appendingPathComponent("Заметки", isDirectory: true)
+        
+        try? FileManager.default.createDirectory(at: voiceDir, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(at: sfxDir, withIntermediateDirectories: true)
         try? FileManager.default.createDirectory(at: notesDir, withIntermediateDirectories: true)
-        self.audioFolderURL = baseDir
+        
+        self.audioFolderURL = voiceDir
+        self.sfxFolderURL = sfxDir
         self.notesFolderURL = notesDir
         super.init()
         Task { await loadAudioNotes() }
@@ -269,7 +276,7 @@ final class AudioManager: NSObject, ObservableObject, AVAudioRecorderDelegate, A
     // MARK: - SFX Generator (Censor Beep & Test Tones with selectable Frequency)
     func generateToneWav(frequency: Double = 1000.0) -> URL? {
         let freqInt = Int(frequency)
-        let fileURL = audioFolderURL.appendingPathComponent("FloatNote_Tone_\(freqInt)Hz.wav")
+        let fileURL = sfxFolderURL.appendingPathComponent("FloatNote_Tone_\(freqInt)Hz.wav")
         if FileManager.default.fileExists(atPath: fileURL.path) {
             return fileURL
         }

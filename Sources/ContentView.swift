@@ -1168,22 +1168,23 @@ struct AudioNotesView: View {
             }
             
             // SFX & Audio Utilities Bar (Multi-Frequency Tone Generator)
-            VStack(spacing: 4) {
-                Divider().background(Color.white.opacity(0.1))
-                HStack(spacing: 6) {
-                    Image(systemName: "waveform.path.badge.plus")
-                        .font(.system(size: 11))
+            VStack(spacing: 5) {
+                Divider().background(Color.white.opacity(0.12))
+                
+                HStack(spacing: 5) {
+                    Image(systemName: "waveform")
+                        .font(.system(size: 11, weight: .bold))
                         .foregroundColor(.yellow)
                     
                     // Frequency Selector
                     Picker("", selection: $selectedFrequency) {
-                        Text("440 Hz").tag(440.0)
-                        Text("800 Hz").tag(800.0)
-                        Text("1 kHz").tag(1000.0)
-                        Text("2 kHz").tag(2000.0)
+                        Text("440Hz").tag(440.0)
+                        Text("800Hz").tag(800.0)
+                        Text("1kHz").tag(1000.0)
+                        Text("2kHz").tag(2000.0)
                     }
                     .pickerStyle(.segmented)
-                    .frame(width: 170)
+                    .frame(width: 155)
                     .controlSize(.mini)
                     
                     Spacer()
@@ -1194,8 +1195,7 @@ struct AudioNotesView: View {
                     }) {
                         Image(systemName: "speaker.wave.2.fill")
                             .font(.system(size: 10))
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 3)
+                            .frame(width: 24, height: 20)
                             .background(Color.yellow.opacity(0.2))
                             .foregroundColor(.yellow)
                             .cornerRadius(4)
@@ -1203,16 +1203,16 @@ struct AudioNotesView: View {
                     .buttonStyle(.plain)
                     .help("Прослушать тон \(Int(selectedFrequency)) Гц")
                     
-                    // Drag-and-drop to Timeline badge
+                    // Drag-and-drop WAV badge
                     if let url = audioManager.generateToneWav(frequency: selectedFrequency) {
-                        HStack(spacing: 3) {
+                        HStack(spacing: 2) {
                             Image(systemName: "arrow.up.right.and.arrow.down.left.rectangle")
-                                .font(.system(size: 9))
+                                .font(.system(size: 8))
                             Text("WAV")
-                                .font(.system(size: 10, weight: .bold))
+                                .font(.system(size: 10, weight: .heavy))
                         }
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 3)
+                        .padding(.horizontal, 6)
+                        .frame(height: 20)
                         .background(Color.yellow.opacity(0.25))
                         .foregroundColor(.yellow)
                         .cornerRadius(4)
@@ -1225,23 +1225,30 @@ struct AudioNotesView: View {
                         }
                         .help("Перетащите мышкой прямо на аудиодорожку в DaVinci, Premiere или FCPX!")
                         
-                        // Finder reveal (robust via NSWorkspace and bash fallback)
+                        // Finder reveal (direct via Process 'open -R')
                         Button(action: {
-                            if !NSWorkspace.shared.selectFile(url.path, inFileViewerRootedAtPath: audioManager.audioFolderURL.path) {
-                                NSWorkspace.shared.open(audioManager.audioFolderURL)
-                            }
+                            let proc = Process()
+                            proc.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+                            proc.arguments = ["-R", url.path]
+                            try? proc.run()
                         }) {
-                            Image(systemName: "folder")
-                                .font(.system(size: 10))
-                                .foregroundColor(.white.opacity(0.7))
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color.white.opacity(0.08))
+                                Image(systemName: "folder.fill")
+                                    .font(.system(size: 10))
+                                    .foregroundColor(.white.opacity(0.8))
+                            }
+                            .frame(width: 24, height: 20)
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .help("Показать файл в Finder")
+                        .help("Показать файл тона в Finder")
                     }
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
-                .background(Color.black.opacity(0.25))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background(Color.black.opacity(0.35))
             }
         }
     }
