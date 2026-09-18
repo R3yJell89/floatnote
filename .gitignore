@@ -19,8 +19,12 @@ FloatNote.app/
 # User Data & Cache
 FloatNote_Files/
 *.m4a
-*.png
 *.wav
+
+# Keep documentation screenshots
+!docs/
+!docs/screenshots/
+!docs/screenshots/*.png
 
 # IDE & Editor files
 .vscode/

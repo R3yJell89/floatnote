@@ -222,7 +222,7 @@ final class FloatingPanel: NSPanel {
                 self.ignoresMouseEvents = false
             }
         } else {
-            // Mouse is in body / content area -> pass click straight through to DaVinci Resolve!
+            // Mouse is in body / content area -> pass click straight through to underlying editor / background window!
             if !self.ignoresMouseEvents {
                 self.ignoresMouseEvents = true
             }

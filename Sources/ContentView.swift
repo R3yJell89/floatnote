@@ -140,7 +140,6 @@ struct MacEditorView: NSViewRepresentable {
 
 struct ContentView: View {
     @ObservedObject var storage = StorageManager.shared
-    @ObservedObject var resolve = ResolveBridge.shared
     @ObservedObject var templateManager = TemplateManager.shared
     @ObservedObject var timerPanel = TimerPanelManager.shared
     @ObservedObject var clipboardPanel = ClipboardPanelManager.shared
@@ -424,40 +423,17 @@ struct ContentView: View {
                 }
             }
             
-            // Tier 1.5: Companion Tools & DaVinci Bar
-            HStack(spacing: 4) {
-                // DaVinci Status Pill
-                Button(action: {
-                    resolve.checkConnection()
-                }) {
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(resolve.isConnected ? Color.green : Color.gray.opacity(0.5))
-                            .frame(width: 6, height: 6)
-                        Text(resolve.isConnected ? (resolve.currentTimeline ?? resolve.currentProject ?? "DaVinci") : "DaVinci")
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundColor(resolve.isConnected ? .green : .white.opacity(0.45))
-                            .lineLimit(1)
-                    }
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 3)
-                    .background(Color.white.opacity(0.06))
-                    .cornerRadius(4)
-                }
-                .buttonStyle(.plain)
-                .help(resolve.isConnected ? "DaVinci Studio подключен (\(resolve.currentProject ?? "")). Нажмите для обновления" : "DaVinci Studio не подключен. Нажмите для проверки связи")
-                
-                Spacer()
-                
+            // Tier 1.5: Companion Tools Bar
+            HStack(spacing: 6) {
                 // 9:16 Safe Areas
                 Button(action: { safeAreas.toggle() }) {
-                    HStack(spacing: 2) {
+                    HStack(spacing: 3) {
                         Image(systemName: "rectangle.portrait.split.2x1")
                             .font(.system(size: 9))
-                        Text("9:16")
-                            .font(.system(size: 10, weight: .bold))
+                        Text("9:16 Зоны")
+                            .font(.system(size: 10, weight: .semibold))
                     }
-                    .padding(.horizontal, 5)
+                    .padding(.horizontal, 6)
                     .padding(.vertical, 3)
                     .background(safeAreas.isVisible ? Color.cyan.opacity(0.3) : Color.white.opacity(0.06))
                     .foregroundColor(safeAreas.isVisible ? .cyan : .white.opacity(0.8))
@@ -468,7 +444,7 @@ struct ContentView: View {
                     )
                 }
                 .buttonStyle(.plain)
-                .help("Сетка безопасных зон 9:16 (Reels/TikTok/Shorts)")
+                .help("Сетка безопасных зон 9:16 (Reels / TikTok / Shorts)")
                 
                 // Timer companion window
                 Button(action: { timerPanel.toggle() }) {
@@ -511,6 +487,8 @@ struct ContentView: View {
                 }
                 .buttonStyle(.plain)
                 .help("Открыть отдельное окно истории буфера обмена")
+                
+                Spacer()
             }
             
             // Tier 2: Adaptive Full-Width Tabs Bar
@@ -635,14 +613,16 @@ struct ContentView: View {
                 
                 // Quick Insert Timecode button
                 Button(action: {
-                    resolve.fetchTimecode { tc in
-                        if let tc = tc {
-                            if newTaskText.isEmpty {
-                                newTaskText = "[\(tc)] "
-                            } else {
-                                newTaskText += " [\(tc)]"
-                            }
-                        }
+                    let pb = NSPasteboard.general.string(forType: .string) ?? ""
+                    let tcPattern = #"(\d{2}:\d{2}:\d{2}[:;]\d{2})"#
+                    var tcToInsert = "01:00:00:00"
+                    if let range = pb.range(of: tcPattern, options: .regularExpression) {
+                        tcToInsert = String(pb[range])
+                    }
+                    if newTaskText.isEmpty {
+                        newTaskText = "[\(tcToInsert)] "
+                    } else {
+                        newTaskText += " [\(tcToInsert)]"
                     }
                 }) {
                     HStack(spacing: 2) {
@@ -658,7 +638,7 @@ struct ContentView: View {
                     .cornerRadius(4)
                 }
                 .buttonStyle(.plain)
-                .help("Вставить текущий таймкод с DaVinci Resolve")
+                .help("Вставить таймкод (из буфера или шаблон [01:00:00:00])")
             }
             .padding(.horizontal, 10)
             .padding(.top, 6)
@@ -789,13 +769,14 @@ struct ContentView: View {
                 .foregroundColor(item.wrappedValue.isCompleted ? .white.opacity(0.4) : .white)
                 .strikethrough(item.wrappedValue.isCompleted, color: .white.opacity(0.4))
             
-            // Clickable Timecode Badge to Jump in DaVinci
+            // Clickable Timecode Badge (Copies TC to clipboard)
             if let tc = tc {
                 Button(action: {
-                    resolve.jumpToTimecode(tc)
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(tc, forType: .string)
                 }) {
                     HStack(spacing: 2) {
-                        Image(systemName: "play.fill")
+                        Image(systemName: "doc.on.doc")
                             .font(.system(size: 7))
                         Text(tc)
                             .font(.system(size: 10, weight: .bold, design: .monospaced))
@@ -811,33 +792,7 @@ struct ContentView: View {
                     )
                 }
                 .buttonStyle(.plain)
-                .help("Перейти на таймлайне DaVinci к \(tc)")
-                
-                // Add marker button
-                Button(action: {
-                    resolve.addMarker(timecode: tc, color: "Cyan", name: item.wrappedValue.text, note: "Чеклист FloatNote")
-                }) {
-                    Image(systemName: "mappin.and.ellipse")
-                        .font(.system(size: 11))
-                        .foregroundColor(.orange)
-                }
-                .buttonStyle(.plain)
-                .help("Создать маркер в DaVinci на \(tc)")
-            } else if resolve.isConnected {
-                // If no TC in text, provide button to create marker at current playhead
-                Button(action: {
-                    resolve.fetchTimecode { currentTc in
-                        if let currentTc = currentTc {
-                            resolve.addMarker(timecode: currentTc, color: "Blue", name: item.wrappedValue.text, note: "Чеклист FloatNote")
-                        }
-                    }
-                }) {
-                    Image(systemName: "mappin")
-                        .font(.system(size: 10))
-                        .foregroundColor(.white.opacity(0.35))
-                }
-                .buttonStyle(.plain)
-                .help("Создать маркер в DaVinci на текущем таймкоде")
+                .help("Скопировать таймкод \(tc) в буфер обмена")
             }
             
             Button(action: {
@@ -870,16 +825,18 @@ struct ContentView: View {
         VStack(spacing: 0) {
             // Notes Toolbar
             HStack(spacing: 6) {
-                // Timecode from DaVinci
+                // Timecode
                 Button(action: {
-                    resolve.fetchTimecode { tc in
-                        if let tc = tc {
-                            if storage.notesText.isEmpty {
-                                storage.notesText = "[\(tc)] "
-                            } else {
-                                storage.notesText += "\n[\(tc)] "
-                            }
-                        }
+                    let pb = NSPasteboard.general.string(forType: .string) ?? ""
+                    let tcPattern = #"(\d{2}:\d{2}:\d{2}[:;]\d{2})"#
+                    var tcToInsert = "01:00:00:00"
+                    if let range = pb.range(of: tcPattern, options: .regularExpression) {
+                        tcToInsert = String(pb[range])
+                    }
+                    if storage.notesText.isEmpty {
+                        storage.notesText = "[\(tcToInsert)] "
+                    } else {
+                        storage.notesText += "\n[\(tcToInsert)] "
                     }
                 }) {
                     HStack(spacing: 2) {
@@ -895,7 +852,7 @@ struct ContentView: View {
                     .cornerRadius(4)
                 }
                 .buttonStyle(.plain)
-                .help("Вставить текущий таймкод DaVinci Resolve")
+                .help("Вставить таймкод (из буфера или шаблон [01:00:00:00])")
                 
                 // Voice Dictation
                 Button(action: {

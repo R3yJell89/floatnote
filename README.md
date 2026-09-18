@@ -1,18 +1,19 @@
-# 🎬 FloatNote — DaVinci Resolve Power Companion
+# 🎬 FloatNote — The Pro Video Editor Floating Companion
 
 <p align="center">
   <img src="Sources/AppIcon.icns" width="128" height="128" alt="FloatNote Icon">
 </p>
 
 <p align="center">
-  <b>Плавающее окно-компаньон для видеомонтажа в DaVinci Resolve Studio на macOS.</b><br>
-  <i>The ultimate floating companion suite for DaVinci Resolve Studio & professional video editors on macOS.</i>
+  <b>Универсальное плавающее окно-компаньон для видеомонтажеров на macOS.</b><br>
+  <i>The ultimate native floating companion suite for video editors & creators on macOS.</i>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/version-1.1.0-brightgreen.svg" alt="Version 1.1.0">
   <img src="https://img.shields.io/badge/platform-macOS%2013.0+-blue.svg" alt="macOS 13.0+">
-  <img src="https://img.shields.io/badge/DaVinci%20Resolve-Studio%2018%20%7C%2019%20%7C%2020%20%7C%2021-orange.svg" alt="DaVinci Resolve Studio">
+  <img src="https://img.shields.io/badge/Swift-6.0-orange.svg" alt="Swift 6">
+  <img src="https://img.shields.io/badge/DaVinci%20Resolve-Companion%20Plugin-ff69b4.svg" alt="DaVinci Plugin">
   <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License MIT">
 </p>
 
@@ -22,114 +23,142 @@
 
 ---
 
+## 📸 Скриншоты / Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/01_checklist_view.png" width="300" alt="Чеклист монтажа">&nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="docs/screenshots/02_notes_view.png" width="300" alt="Заметки и сценарий">
+</p>
+<p align="center">
+  <img src="docs/screenshots/03_audio_notes.png" width="300" alt="Голосовые заметки">&nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="docs/screenshots/04_sketch_view.png" width="300" alt="Скетчер поверх кадра">
+</p>
+<p align="center">
+  <img src="docs/screenshots/05_timer_window.png" width="280" alt="Таймер монтажа">&nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="docs/screenshots/06_clipboard_window.png" width="280" alt="Менеджер буфера обмена">
+</p>
+<p align="center">
+  <img src="docs/screenshots/07_safe_areas_overlay.png" width="360" alt="Безопасные зоны 9:16">&nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="docs/screenshots/08_settings_view.png" width="300" alt="Окно настроек">
+</p>
+
+---
+
 ## 🇷🇺 Русский
 
-**FloatNote** — это нативное легковесное приложение на SwiftUI и AppKit, спроектированное специально для профессионального монтажа видео в DaVinci Resolve. Оно висит поверх рабочих пространств полноэкранного DaVinci Resolve (слой `1002`), моментально скрывается и открывается по горячей клавише или кнопке скрепки, и напрямую связывается с DaVinci Resolve через официальный Scripting API.
+**FloatNote** — нативное, сверхлегкое приложение на SwiftUI и AppKit, созданное специально для видеомонтажеров. Оно плавает поверх любых полноэкранных NLE (DaVinci Resolve, Adobe Premiere Pro, Final Cut Pro, CapCut, Avid), не перехватывает фокус у таймлайна, мгновенно скрывается по горячей клавише и объединяет все вспомогательные инструменты монтажера в один клик.
+
+В ядре приложения нет жестких привязок — FloatNote работает с любой монтажкой. Для пользователей **DaVinci Resolve Studio & Free** в комплекте идет официальный companion-плагин в папке `Plugins/DaVinciResolve/`.
 
 ---
 
 ### ✨ Ключевые возможности
 
-#### 1. 🎬 Глубокая интеграция с DaVinci Resolve Studio (Scripting API)
-- **Живой мониторинг**: отображает подключение к активному проекту и имя текущего таймлайна (например, `🟢 Timeline 1`).
-- **Интерактивные таймкоды (Click-to-Jump)**: клик по бейджу таймкода `[▶ 01:00:15:00]` в любой задаче чеклиста моментально перемещает плейхед DaVinci Resolve на этот кадр.
-- **Вставка таймкода в 1 клик**: кнопка `⏱ Таймкод` в чеклисте и заметках считывает текущий кадр из DaVinci и подставляет его в текст.
-- **Маркеры таймлайна**: кнопка `📍` создает маркер на таймлайне DaVinci прямо из задачи с сохранением названия и заметок.
+#### 1. 🪟 Полноэкранный плавающий HUD (Level 1002)
+- Висит поверх полноэкранных пространств Spaces без переключения рабочего стола (`.nonactivatingPanel`, `canJoinAllSpaces`, `fullScreenAuxiliary`).
+- **First Mouse**: каждый элемент управления реагирует мгновенно с первого же клика мыши.
+- **Интерактивный Pin**: скрепка для мгновенного скрытия окна (`⇧ Space` возвращает обратно).
+- **Ghost Mode (`⌥ G`)**: сквозной клик сквозь окно прямо в таймлайн или плеер.
 
-#### 2. 🪟 Отдельные плавающие окна-компаньоны
-- **⏱ Таймер монтажной смены & Помодоро (25/5)**:
-  - Отдельное компактное плавающее окно.
-  - Секундомер для учета общего времени работы.
-  - Pomodoro-таймер (25 мин фокуса / 5 мин отдыха) со звуковыми оповещениями.
-- **📋 Менеджер буфера обмена (Clipboard History)**:
-  - Отдельное плавающее окно с историей скопированного текста (до 50 элементов).
-  - Поиск по буферу и копирование в 1 клик для вставки в титры и текст DaVinci.
+#### 2. 📋 Умный чеклист и таймкоды
+- Распознавание таймкодов формата `HH:MM:SS:FF`: кликабельные бейджи `[00:01:24:00]` мгновенно копируют таймкод в буфер обмена для вставки в монтажку.
+- Кнопка `⏱ Таймкод` вставляет таймкод прямо из буфера или по шаблону.
+- Шаблоны монтажных задач:
+  - *🎬 Предэкспортная проверка* (LUFS, offline media, титры, safe zones).
+  - *🎨 Цветокоррекция* (баланс белого, skin tones, scopes).
+  - *✂️ Черновой монтаж* (A-roll, отбор дублей, ритм).
+  - Сохранение собственных шаблонов в JSON.
 
-#### 3. 📐 Прозрачный оверлей безопасных зон 9:16 (Safe Areas)
-- Специальная направляющая рамка формата 9:16 для монтажа вертикальных видео (Reels, TikTok, YouTube Shorts, VK Клипы).
-- Подсказки зон: верхняя панель (поиск/профиль), правая колонка (лайки/шеринг), нижняя зона (титры/звук), центральный прицел.
-- Режим **Lock**: оверлей становится на 100% прозрачным для кликов мыши (`click-through`), позволяя монтировать видео прямо под сеткой.
+#### 3. 📝 Заметки монтажера и сценарий
+- Быстрые заметки, правки от режиссера или сценарий с автосохранением в реальном времени.
+- Встроенная диктовка голосом (`🎙`) на базе Apple Speech Framework (офлайн-распознавание русской и английской речи).
 
-#### 4. 📸 Захват кадра в скетчер (Frame Grabber)
-- Кнопка `📸` позволяет выделить кадр из вьювера DaVinci или экрана и мгновенно поместить его фоном на холст.
-- Рисование стрелок, овалов, прямоугольников, прямых линий и рукописных заметок поверх кадра для раскадровки и правок. Экспорт в PNG.
+#### 4. ⏱ Отдельное окно: Таймер монтажной смены & Помодоро
+- Независимое плавающее окно:
+  - **Секундомер**: учет рабочего времени над проектом.
+  - **Pomodoro 25/5**: интервалы глубокого фокуса (25 мин работы / 5 мин отдыха) со звуковыми уведомлениями.
 
-#### 5. 📋 Шаблоны чеклистов (Workflow Templates)
-- Встроенные пресеты для монтажеров:
-  - *🎬 Предэкспортная проверка* (LUFS, оффлайн клипы, опечатки, безопасные зоны).
-  - *🎨 Цветокоррекция (Color Grading)* (баланс белого, матчинг, skin tones, scopes).
-  - *✂️ Черновой монтаж (Rough Cut)* (отбор дублей, A-Roll, перебивки, ритм).
-- Сохранение собственного списка задач как нового шаблона в JSON.
+#### 5. 📋 Отдельное окно: Менеджер буфера обмена (Clipboard History)
+- Независимое плавающее окно истории скопированных текстов (до 50 записей).
+- Мгновенный возврат любого фрагмента в буфер для быстрой вставки в титры, генераторы текста или заметки.
 
-#### 6. 🎙 Голосовой ввод (Apple Speech Framework)
-- Распознавание русской речи на устройстве.
-- Быстрая диктовка задач и заметок по кнопке микрофона `🎙`.
+#### 6. 📐 Прозрачный оверлей безопасных зон 9:16 (Safe Areas)
+- Направляющая сетка для вертикальных форматов: Instagram Reels, TikTok, YouTube Shorts, VK Клипы.
+- Разметка зон интерфейса (верхняя шапка, правая колонка кнопок, нижнее описание) и центральный прицел.
+- Кнопка **Lock**: оверлей блокируется и становится на 100% прозрачным для кликов мыши, позволяя монтировать видео прямо под направляющими.
 
-#### 7. 👻 Ghost Mode & First Mouse
-- **Сквозной клик**: шапка окна и кнопки остаются интерактивными, клики по контенту пролетают прямо в таймлайн DaVinci.
-- **First Mouse**: каждый элемент интерфейса реагирует с первого клика мыши даже из неактивного состояния.
-- **Кнопка Pin**: клик по скрепке скрывает окно с экрана (`⇧ Space` возвращает обратно).
+#### 7. 📸 Захват кадра и скетчер (Frame Grabber & Sketch)
+- Захват стоп-кадра из вьювера монтажки (`📸`) в качестве фона на холст.
+- Инструменты аннотирования: стрелки, прямоугольники, круги, линии, карандаш, палитра цветов, толщина кисти.
+- Экспорт эскизов с правками в PNG для отправки заказчику.
 
 ---
 
-### ⌨️ Горячие клавиши (Hotkeys)
+### 🔌 Плагин для DaVinci Resolve Studio & Free
 
-| Действие | Горячая клавиша по умолчанию | Настраивается в Настройках |
+В папке `Plugins/DaVinciResolve/` находится официальный Python-мост (`FloatNote_Bridge.py`), использующий DaVinci Resolve Scripting API:
+- Считывание текущего таймкода плейхеда DaVinci.
+- Прыжок курсора воспроизведения на указанный таймкод (`SetCurrentTimecode`).
+- Создание цветных маркеров на таймлайне с комментариями (`AddMarker`).
+
+**Установка плагина в 1 клик:**
+```bash
+cd Plugins/DaVinciResolve
+./install.sh
+```
+После установки скрипт появляется в меню DaVinci Resolve: **Workspace → Scripts → Utility → FloatNote_Bridge**.
+
+---
+
+### ⌨️ Горячие клавиши по умолчанию
+
+| Действие | Хоткей | Настройка |
 |---|---|---|
-| Скрыть / Показать окно | `⇧ Space` (или клик по Pin) | Да (`⌥`, `⌘`, `⌃`, `⇧` + любая клавиша) |
-| Сквозной режим (Ghost Mode) | `⌥ G` | Да |
-| Открыть настройки | `⌘ ,` | — |
-| Отмена в скетчере | `⌘ Z` | — |
-| Закрыть приложение | `⌘ Q` | — |
+| Скрыть / Показать окно | `⇧ Space` | Настраивается в Настройках (`⌘ ,`) |
+| Сквозной режим (Ghost Mode) | `⌥ G` | Настраивается в Настройках |
+| Открыть Настройки | `⌘ ,` | В окне приложения |
+| Отмена действия в скетчере | `⌘ Z` | Вкладка «Скетч» |
 
 ---
 
-### 🛠 Сборка из исходников (macOS)
+### 🛠 Сборка и установка
 
-Требования:
+**Требования:**
 - macOS 13.0+ (Ventura, Sonoma, Sequoia, Tahoe)
+- Apple Silicon (M1/M2/M3/M4) или Intel Mac
 - Xcode Command Line Tools (`xcode-select --install`)
-- Python 3 (системный `/usr/bin/python3`)
-- DaVinci Resolve Studio (18 / 19 / 20 / 21)
 
 ```bash
 git clone https://github.com/r3yjell/FloatNote.git
 cd FloatNote
 chmod +x build.sh
-./build.sh
+./build.sh --install
 ```
-Скрипт скомпилирует приложение в `FloatNote.app` и автоматически установит его в `/Applications/FloatNote.app`.
 
----
-
-### 🪟 Планы по поддержке Windows (Roadmap)
-Бизнес-логика FloatNote (скриптинг DaVinci через Python bridge, менеджер шаблонов, хранилище) абстрагирована от UI. В будущих версиях запланирован порт под Windows с отдельным графическим интерфейсом.
+Приложение соберется и установится в папку `/Applications/FloatNote.app`.
 
 ---
 
 ## 🇬🇧 English
 
-**FloatNote** is a native, ultra-lightweight floating companion app crafted with SwiftUI & AppKit specifically for video editors working in DaVinci Resolve on macOS. It hovers persistently above fullscreen DaVinci Resolve Spaces (layer `1002`), hides instantly with a hotkey or pin toggle, and communicates directly with DaVinci Resolve via its official Scripting API.
+**FloatNote** is a native, ultra-lightweight floating companion app crafted with SwiftUI & AppKit for professional video editors. It floats above fullscreen NLE windows (DaVinci Resolve, Adobe Premiere Pro, Final Cut Pro, CapCut, Avid), avoids stealing focus from your timeline, hides instantly with a hotkey, and bundles all essential editing companion tools into one click.
 
-### Key Features
-- **DaVinci Resolve Scripting API Integration**: Live project/timeline detection, clickable timecodes `[01:00:15:00]` that jump the timeline playhead, and 1-click timeline marker creation from checklist tasks.
-- **Companion Floating Windows**:
-  - **Stopwatch & Pomodoro (25/5)**: Independent floating HUD window for tracking edit sessions with audio alerts.
-  - **Clipboard History**: Independent window tracking copied text snippets (up to 50 items) with instant search and 1-click copy-back.
-- **9:16 Safe Areas Transparent Overlay**: Aspect-ratio locked vertical video guides for Instagram Reels, TikTok, YouTube Shorts, and VK Clips with 100% click-through into DaVinci.
-- **Frame Grabber into Canvas**: Snip a DaVinci viewer frame directly onto the sketch canvas to draw arrows, circles, and markup notes for colorists/editors.
-- **Workflow Checklist Templates**: Built-in pre-export, color grading, and rough cut checklists + save your own custom templates to JSON.
-- **Voice Dictation**: Instant speech-to-text for task and note creation powered by Apple's native Speech framework.
-- **Intelligent Ghost Mode & First Mouse**: 100% click-through with interactive header controls and immediate response on the very first mouse click.
-
-### Build from Source
-```bash
-git clone https://github.com/r3yjell/FloatNote.git
-cd FloatNote
-./build.sh
-```
+### ✨ Features
+- **Fullscreen Floating HUD**: Layer `1002`, `.nonactivatingPanel`, First Mouse responsiveness.
+- **Interactive Checklists & Timecodes**: Automatic `HH:MM:SS:FF` detection with click-to-copy timecode badges.
+- **Workflow Templates**: Built-in checklists for Color Grading, Pre-export checks, and Rough Cut review.
+- **Standalone Companion Windows**:
+  - **Timer & Pomodoro**: Stopwatch and 25/5 focus timer.
+  - **Clipboard History**: Up to 50 copied text snippets with 1-click restore.
+- **Transparent 9:16 Safe Areas Overlay**: Lockable click-through grid for TikTok, Reels & Shorts.
+- **Frame Grabber & Sketch**: Grab viewer frames and annotate them with arrows, shapes, and text notes.
+- **Voice Dictation**: Speech-to-text dictation via Apple Speech Framework.
+- **DaVinci Resolve Plugin**: Dedicated companion bridge script in `Plugins/DaVinciResolve/` for timeline synchronization and marker placement.
 
 ---
 
-## 📄 License
-Released under the [MIT License](LICENSE).
+### 📄 Лицензия / License
+
+MIT License. Свободно для личного и коммерческого использования.
+Разработано с заботой о видеомонтажерах.
+*(P.S. добавили больше багов, чтобы можно было исправить 😉)*

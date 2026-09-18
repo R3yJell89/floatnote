@@ -63,12 +63,6 @@ cat << 'EOF' > "$APP_BUNDLE/Contents/Info.plist"
 </plist>
 EOF
 
-# Copy Python DaVinci Resolve Bridge
-if [ -f "$DIR/Sources/resolve_bridge.py" ]; then
-    cp "$DIR/Sources/resolve_bridge.py" "$APP_BUNDLE/Contents/Resources/resolve_bridge.py"
-    chmod +x "$APP_BUNDLE/Contents/Resources/resolve_bridge.py"
-fi
-
 # Compile Swift sources
 echo "Компиляция Swift исходников..."
 swiftc -O -sdk "$SDK_PATH" \
@@ -78,7 +72,6 @@ swiftc -O -sdk "$SDK_PATH" \
     "$DIR/Sources/SettingsView.swift" \
     "$DIR/Sources/AudioManager.swift" \
     "$DIR/Sources/DrawingCanvasView.swift" \
-    "$DIR/Sources/ResolveBridge.swift" \
     "$DIR/Sources/SafeAreasOverlay.swift" \
     "$DIR/Sources/ChecklistTemplates.swift" \
     "$DIR/Sources/TimerWindow.swift" \
@@ -91,12 +84,11 @@ swiftc -O -sdk "$SDK_PATH" \
 
 chmod +x "$APP_BUNDLE/Contents/MacOS/FloatNote"
 
-# Copy to Applications folder and workspace
-rm -rf "/Applications/$APP_NAME.app"
-cp -R "$APP_BUNDLE" "/Applications/$APP_NAME.app"
-ROOT_APP="/Users/r3yjell/Documents/Давинчи/$APP_NAME.app"
-rm -rf "$ROOT_APP"
-cp -R "$APP_BUNDLE" "$ROOT_APP"
+if [ "$1" = "--install" ]; then
+    echo "Установка в /Applications/$APP_NAME.app..."
+    rm -rf "/Applications/$APP_NAME.app"
+    cp -R "$APP_BUNDLE" "/Applications/$APP_NAME.app"
+    echo "=== Установлено в: /Applications/$APP_NAME.app ==="
+fi
 
 echo "=== Сборка успешно завершена: $APP_BUNDLE ==="
-echo "=== Скопировано в: /Applications/$APP_NAME.app и $ROOT_APP ==="
