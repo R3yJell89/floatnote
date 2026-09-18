@@ -5,7 +5,7 @@
     <Grid Margin="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/> <!-- Tone Section -->
-            <RowDefinition Height="*"/>    <!-- Voice Notes / Dictation -->
+            <RowDefinition Height="*"/>    <!-- Voice Notes Recording & Transcription -->
         </Grid.RowDefinitions>
 
         <!-- BEEP Generator Card -->
@@ -24,7 +24,6 @@
                         <Button Click="Play440_Click" Content="440Hz" Padding="8,4" Background="#20FFFFFF" Foreground="White" BorderThickness="0" Margin="0,0,4,0" Cursor="Hand"/>
                         <Button Click="Play1000_Click" Content="1000Hz" Padding="8,4" Background="{StaticResource AccentGreenBrush}" Foreground="White" BorderThickness="0" Margin="0,0,4,0" Cursor="Hand"/>
                         <Button Click="Play2000_Click" Content="2000Hz" Padding="8,4" Background="#20FFFFFF" Foreground="White" BorderThickness="0" Margin="0,0,4,0" Cursor="Hand"/>
-                        <!-- Stop Tone Button -->
                         <Button Click="StopTone_Click" Content="⏹ Стоп" Padding="8,4" Background="#33FF3B30" Foreground="#FF453A" BorderThickness="0" Cursor="Hand" ToolTip="Остановить звук"/>
                     </StackPanel>
 
@@ -47,13 +46,67 @@
             </StackPanel>
         </Border>
 
-        <!-- Voice Notes Placeholder Card -->
+        <!-- Voice Notes Recording & Native Dictaphone Card -->
         <Border Grid.Row="1" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource SubtleBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12">
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <TextBlock Text="🎙" FontSize="28" HorizontalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"/>
-                <TextBlock Text="Голосовые заметки монтажа" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" FontSize="13" HorizontalAlignment="Center" Margin="0,6,0,2"/>
-                <TextBlock Text="Нажмите Win + H для нативной диктовки Windows" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" HorizontalAlignment="Center"/>
-            </StackPanel>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/> <!-- Controls -->
+                    <RowDefinition Height="*"/>    <!-- Recorded List -->
+                </Grid.RowDefinitions>
+
+                <!-- Top Recording Actions -->
+                <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Start / Stop Record Button -->
+                    <Button x:Name="RecordBtn" Click="RecordBtn_Click" Content="🔴 Начать запись" Padding="10,5" Background="#33FF3B30" Foreground="#FF453A" BorderThickness="0" FontWeight="SemiBold" FontSize="11" Cursor="Hand"/>
+
+                    <!-- Transcription Status -->
+                    <TextBlock x:Name="StatusText" Grid.Column="1" Text="" Foreground="{StaticResource AccentGreenBrush}" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
+
+                    <!-- Open Native Windows Dictaphone Button -->
+                    <Button Grid.Column="2" Click="OpenWindowsSoundRecorder_Click" Content="🎙 Диктофон Windows" Padding="8,5" Background="#20FFFFFF" Foreground="{StaticResource TextSecondaryBrush}" BorderThickness="0" FontSize="11" Cursor="Hand" ToolTip="Открыть системный Диктофон Windows (Запись голоса)"/>
+                </Grid>
+
+                <!-- Recorded Voice Notes List with Transcriptions -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="VoiceNotesControl">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#14FFFFFF" BorderBrush="{StaticResource SubtleBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8" Margin="0,0,0,6">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <!-- Meta & Actions -->
+                                        <Grid Grid.Row="0">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="🎵" FontSize="11" Margin="0,0,4,0"/>
+                                                <TextBlock Text="{Binding FileName}" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" FontSize="11"/>
+                                                <TextBlock Text="{Binding TimeFormatted}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="10" Margin="6,0,0,0"/>
+                                            </StackPanel>
+
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                <Button Click="PlayVoice_Click" Content="▶ Слушать" FontSize="10" Background="Transparent" Foreground="{StaticResource AccentGreenBrush}" BorderThickness="0" Cursor="Hand" Margin="0,0,6,0"/>
+                                                <Button Click="CopyTranscript_Click" Content="📋 Скопировать" FontSize="10" Background="Transparent" Foreground="{StaticResource TextSecondaryBrush}" BorderThickness="0" Cursor="Hand"/>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!-- Transcript Text -->
+                                        <TextBlock Grid.Row="1" Text="{Binding Transcript}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
         </Border>
     </Grid>
 </UserControl>
