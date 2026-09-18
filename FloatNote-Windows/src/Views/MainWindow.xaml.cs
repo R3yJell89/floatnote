@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -31,14 +30,8 @@ public partial class MainWindow : Window
         Height = _storage.Preferences.WindowHeight > 0 ? _storage.Preferences.WindowHeight : 480;
         Topmost = _storage.Preferences.IsPinned;
 
-        RefreshChecklist();
-        NotesTextBox.Text = _storage.NotesText;
-    }
-
-    private void RefreshChecklist()
-    {
-        ChecklistItemsControl.ItemsSource = null;
         ChecklistItemsControl.ItemsSource = _storage.Checklist;
+        NotesTextBox.Text = _storage.NotesText;
     }
 
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -128,7 +121,6 @@ public partial class MainWindow : Window
 
         _storage.Checklist.Add(item);
         _storage.SaveChecklist();
-        RefreshChecklist();
         NewTaskInput.Clear();
 
         if (!string.IsNullOrEmpty(timecode) && _storage.Preferences.AutoCreateMarkers)
@@ -163,7 +155,16 @@ public partial class MainWindow : Window
         }
     }
 
-    private void TaskCheck_Changed(object sender, RoutedEventArgs e)
+    private void DeleteTask_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.DataContext is ChecklistItem item)
+        {
+            _storage.Checklist.Remove(item);
+            _storage.SaveChecklist();
+        }
+    }
+
+    private void TaskCheck_Click(object sender, RoutedEventArgs e)
     {
         _storage.SaveChecklist();
     }

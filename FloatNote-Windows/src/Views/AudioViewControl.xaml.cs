@@ -1,5 +1,7 @@
+using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using FloatNote.Services;
 
 namespace FloatNote.Views;
@@ -26,10 +28,17 @@ public partial class AudioViewControl : UserControl
         AudioToneGenerator.PlayTone(2000);
     }
 
-    private void DragWav_Click(object sender, RoutedEventArgs e)
+    private void StopTone_Click(object sender, RoutedEventArgs e)
+    {
+        AudioToneGenerator.StopTone();
+    }
+
+    private void WavBorder_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         string wavPath = AudioToneGenerator.GenerateBeepWav(1000);
-        var data = new DataObject(DataFormats.FileDrop, new string[] { wavPath });
+        var files = new StringCollection { wavPath };
+        var data = new DataObject();
+        data.SetFileDropList(files);
         DragDrop.DoDragDrop(this, data, DragDropEffects.Copy);
     }
 }

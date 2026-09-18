@@ -43,7 +43,7 @@
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,6,0">
                     <Button Click="ToggleTimer_Click" Style="{StaticResource WindowCaptionButtonStyle}" ToolTip="Таймер монтажа &amp; Помодоро" Content="⏱"/>
                     <Button Click="ToggleClipboard_Click" Style="{StaticResource WindowCaptionButtonStyle}" ToolTip="История буфера" Content="📋"/>
-                    <Button Click="ToggleSafeAreas_Click" Style="{StaticResource WindowCaptionButtonStyle}" ToolTip="Безопасные зоны 9:16" Content="📐"/>
+                    <Button Click="ToggleSafeAreas_Click" Style="{StaticResource WindowCaptionButtonStyle}" ToolTip="Безопасные зоны 9:16 (Esc для закрытия)" Content="📐"/>
                     <Button Click="ToggleReference_Click" Style="{StaticResource WindowCaptionButtonStyle}" ToolTip="Референс HUD" Content="🖼"/>
                     <Button Click="OpenSettings_Click" Style="{StaticResource WindowCaptionButtonStyle}" ToolTip="Настройки" Content="⚙"/>
                     <Button Click="Minimize_Click" Style="{StaticResource WindowCaptionButtonStyle}" ToolTip="Свернуть" Content="—"/>
@@ -61,7 +61,7 @@
 
             <!-- 3. Tab Contents -->
             <Grid Grid.Row="2" Margin="12,4,12,4">
-                <!-- Checklist -->
+                <!-- Checklist View -->
                 <ScrollViewer x:Name="ChecklistScrollViewer" VerticalScrollBarVisibility="Auto">
                     <ItemsControl x:Name="ChecklistItemsControl">
                         <ItemsControl.ItemTemplate>
@@ -73,12 +73,60 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <CheckBox Grid.Column="0" IsChecked="{Binding IsCompleted}" VerticalAlignment="Center" Margin="0,0,8,0" Checked="TaskCheck_Changed" Unchecked="TaskCheck_Changed"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding Title}" FontFamily="{StaticResource SegoeUIVariable}" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                        <Button Grid.Column="2" Content="{Binding Timecode}" Click="Timecode_Click" Background="Transparent" BorderThickness="0" Foreground="{StaticResource TextSecondaryBrush}" FontFamily="Consolas, monospace" FontSize="11" Cursor="Hand" Margin="6,0" ToolTip="Перейти к таймкоду"/>
-                                        <Button Grid.Column="3" Click="AddMarker_Click" Background="Transparent" BorderThickness="0" Foreground="{StaticResource AccentGreenBrush}" FontSize="11" Cursor="Hand" ToolTip="Маркер на таймлайн DaVinci" Content="📍"/>
+                                        <!-- Checkbox -->
+                                        <CheckBox Grid.Column="0" 
+                                                  IsChecked="{Binding IsCompleted, Mode=TwoWay}" 
+                                                  VerticalAlignment="Center" 
+                                                  Margin="0,0,8,0" 
+                                                  Click="TaskCheck_Click"/>
+
+                                        <!-- Title -->
+                                        <TextBlock Grid.Column="1" 
+                                                   Text="{Binding Title}" 
+                                                   FontFamily="{StaticResource SegoeUIVariable}" 
+                                                   FontSize="12" 
+                                                   Foreground="{StaticResource TextPrimaryBrush}" 
+                                                   VerticalAlignment="Center" 
+                                                   TextTrimming="CharacterEllipsis"/>
+
+                                        <!-- Timecode (clean subtle text) -->
+                                        <Button Grid.Column="2" 
+                                                Content="{Binding Timecode}" 
+                                                Click="Timecode_Click" 
+                                                Background="Transparent" 
+                                                BorderThickness="0" 
+                                                Foreground="{StaticResource TextSecondaryBrush}" 
+                                                FontFamily="Consolas, monospace" 
+                                                FontSize="11" 
+                                                Cursor="Hand" 
+                                                Margin="6,0" 
+                                                ToolTip="Перейти к таймкоду на таймлайне"/>
+
+                                        <!-- Pin Marker Button -->
+                                        <Button Grid.Column="3" 
+                                                Click="AddMarker_Click" 
+                                                Background="Transparent" 
+                                                BorderThickness="0" 
+                                                Foreground="{StaticResource AccentGreenBrush}" 
+                                                FontSize="11" 
+                                                Cursor="Hand" 
+                                                ToolTip="Поставить маркер на таймлайн DaVinci" 
+                                                Content="📍"
+                                                Margin="4,0"/>
+
+                                        <!-- Delete Task Button -->
+                                        <Button Grid.Column="4" 
+                                                Click="DeleteTask_Click" 
+                                                Background="Transparent" 
+                                                BorderThickness="0" 
+                                                Foreground="#88FFFFFF" 
+                                                FontSize="10" 
+                                                Cursor="Hand" 
+                                                ToolTip="Удалить задачу" 
+                                                Content="✕"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -96,7 +144,7 @@
                 <views:SketchViewControl x:Name="SketchControl" Visibility="Collapsed"/>
             </Grid>
 
-            <!-- 4. Bottom Task Input Bar (Visible only for Checklist) -->
+            <!-- 4. Bottom Task Input Bar -->
             <Border x:Name="BottomInputBar" Grid.Row="3" Background="#14FFFFFF" CornerRadius="0,0,10,10" Padding="10,6">
                 <Grid>
                     <Grid.ColumnDefinitions>

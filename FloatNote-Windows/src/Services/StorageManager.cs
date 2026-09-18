@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.Json;
 using FloatNote.Models;
@@ -17,12 +17,11 @@ public class StorageManager
     private readonly string _notesFile;
 
     public UserPreferences Preferences { get; set; } = new();
-    public List<ChecklistItem> Checklist { get; set; } = new();
+    public ObservableCollection<ChecklistItem> Checklist { get; set; } = new();
     public string NotesText { get; set; } = string.Empty;
 
     private StorageManager()
     {
-        // Store in %APPDATA%\FloatNote
         string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         AppDataPath = Path.Combine(appData, "FloatNote");
         Directory.CreateDirectory(AppDataPath);
@@ -47,12 +46,29 @@ public class StorageManager
             if (File.Exists(_checklistFile))
             {
                 string json = File.ReadAllText(_checklistFile);
-                Checklist = JsonSerializer.Deserialize<List<ChecklistItem>>(json) ?? new();
+                var items = JsonSerializer.Deserialize<ObservableCollection<ChecklistItem>>(json);
+                if (items != null) Checklist = items;
+            }
+
+            if (Checklist.Count == 0)
+            {
+                // Default clean production tasks
+                Checklist.Add(new ChecklistItem { Title = "Цветокоррекция: выровнять баланс белого", Timecode = "01:00:02:14", IsCompleted = true });
+                Checklist.Add(new ChecklistItem { Title = "Добавить перебивку с общим планом", Timecode = "01:00:15:00", IsCompleted = false });
+                Checklist.Add(new ChecklistItem { Title = "Титр: имя и должность эксперта", Timecode = "01:00:28:05", IsCompleted = false });
+                Checklist.Add(new ChecklistItem { Title = "Сгладить аудиопереход на склейке", Timecode = "01:00:42:18", IsCompleted = false });
+                Checklist.Add(new ChecklistItem { Title = "Финальный экспорт: проверить LUFS -14", Timecode = "01:01:05:00", IsCompleted = false });
+                SaveChecklist();
             }
 
             if (File.Exists(_notesFile))
             {
                 NotesText = File.ReadAllText(_notesFile);
+            }
+            else
+            {
+                NotesText = "🎬 Проект: Коммерческий промо-ролик\n— Хронометраж: 01:15\n— Целевая платформа: YouTube Shorts & Reels (9:16)\n— Мастер-аудио: -14 LUFS интегрально, True Peak -1.0 dBFS\n\nПравки от режиссера:\n1. В интро усилить динамику на первых 3 секундах.\n2. Кадр с продуктом сделать чуть теплее (+200K по балансу белого).\n3. В финале логотип анимацией Fade In на 12 кадров.";
+                SaveNotes(NotesText);
             }
         }
         catch (Exception ex)
