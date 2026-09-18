@@ -1,0 +1,50 @@
+<Window x:Class="FloatNote.Views.TimerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Таймер монтажа"
+        Height="160" Width="240"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        WindowStartupLocation="Manual">
+
+    <Border Background="{StaticResource AcrylicBackgroundBrush}"
+            BorderBrush="{StaticResource SubtleBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="10"
+            MouseLeftButtonDown="Border_MouseLeftButtonDown">
+
+        <Grid Margin="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="32"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title & Close -->
+            <Grid Grid.Row="0">
+                <TextBlock Text="⏱ ТАЙМЕР" Foreground="{StaticResource TextSecondaryBrush}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
+                <Button Click="Close_Click" HorizontalAlignment="Right" Style="{StaticResource WindowCaptionButtonStyle}" Content="✕" Width="20" Height="20"/>
+            </Grid>
+
+            <!-- Digits Display -->
+            <TextBlock x:Name="TimerDigits" 
+                       Grid.Row="1" 
+                       Text="25:00" 
+                       FontSize="36" 
+                       FontWeight="Light" 
+                       FontFamily="Consolas, monospace" 
+                       Foreground="{StaticResource TextPrimaryBrush}" 
+                       HorizontalAlignment="Center" 
+                       VerticalAlignment="Center"/>
+
+            <!-- Controls -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Button x:Name="PlayPauseButton" Click="PlayPause_Click" Content="▶" Width="28" Height="24" Background="Transparent" Foreground="{StaticResource AccentGreenBrush}" BorderThickness="0" Cursor="Hand"/>
+                <Button Click="Reset_Click" Content="↺" Width="28" Height="24" Background="Transparent" Foreground="{StaticResource TextSecondaryBrush}" BorderThickness="0" Cursor="Hand" Margin="8,0,0,0"/>
+                <Button x:Name="ModeButton" Click="Mode_Click" Content="Pomodoro" FontSize="10" Background="Transparent" Foreground="{StaticResource TextSecondaryBrush}" BorderThickness="0" Cursor="Hand" Margin="8,0,0,0"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

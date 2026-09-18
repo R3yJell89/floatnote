@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>assets\app.ico</ApplicationIcon>
+    <AssemblyName>FloatNote</AssemblyName>
+    <RootNamespace>FloatNote</RootNamespace>
+    <Version>1.2.0</Version>
+    <Company>R3yJell</Company>
+    <Product>FloatNote for Windows</Product>
+    <Description>The Pro Video Editor Floating Companion Suite</Description>
+
+    <!-- Lightweight Optimizations: Single portable EXE with fast startup -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>false</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+  </PropertyGroup>
+
+  <!-- Fluent System Fonts & Resources -->
+  <ItemGroup>
+    <None Include="assets\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

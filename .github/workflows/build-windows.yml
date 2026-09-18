@@ -1,0 +1,35 @@
+name: Build FloatNote for Windows
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore FloatNote-Windows/FloatNote.csproj
+
+    - name: Build and Publish Single-File Executable
+      run: |
+        dotnet publish FloatNote-Windows/FloatNote.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o ./publish
+
+    - name: Upload Windows Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: FloatNote-Windows-x64
+        path: ./publish/FloatNote.exe

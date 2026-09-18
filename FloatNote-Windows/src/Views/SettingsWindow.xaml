@@ -1,0 +1,95 @@
+<Window x:Class="FloatNote.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Настройки FloatNote"
+        Height="480" Width="440"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        WindowStartupLocation="CenterOwner">
+
+    <Border Background="{StaticResource AcrylicBackgroundBrush}"
+            BorderBrush="{StaticResource SubtleBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="10">
+
+        <Grid Margin="16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="36"/> <!-- Header -->
+                <RowDefinition Height="*"/>  <!-- Settings Cards -->
+                <RowDefinition Height="40"/> <!-- Footer -->
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <Grid Grid.Row="0">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="⚙" FontSize="16" Foreground="{StaticResource AccentGreenBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Text="Настройки FloatNote" 
+                               FontFamily="{StaticResource SegoeUIVariable}" 
+                               FontWeight="SemiBold" 
+                               FontSize="14" 
+                               Foreground="{StaticResource TextPrimaryBrush}" 
+                               Margin="8,0,0,0" 
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+                <Button Click="Close_Click" HorizontalAlignment="Right" Style="{StaticResource WindowCaptionButtonStyle}" Content="✕"/>
+            </Grid>
+
+            <!-- Settings Content (Cards) -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,8">
+                <StackPanel>
+                    <!-- Card 1: NLE Selection -->
+                    <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource SubtleBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="Основной видеоредактор (NLE)" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,8">
+                                <RadioButton x:Name="RadioDVR" Content="DaVinci Resolve" IsChecked="True" Style="{StaticResource PillTabButtonStyle}" Margin="0,0,6,0"/>
+                                <RadioButton x:Name="RadioPR" Content="Premiere Pro" Style="{StaticResource PillTabButtonStyle}"/>
+                            </StackPanel>
+                            <CheckBox x:Name="CheckAutoMarkers" 
+                                      Content="Автосоздание маркера в DaVinci при добавлении задачи" 
+                                      IsChecked="True" 
+                                      Foreground="{StaticResource TextPrimaryBrush}" 
+                                      FontSize="12" 
+                                      Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Card 2: Window Behavior -->
+                    <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource SubtleBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="Поведение окна" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
+                            <CheckBox x:Name="CheckAlwaysOnTop" 
+                                      Content="Закреплять окно поверх всех окон (Always on Top)" 
+                                      IsChecked="True" 
+                                      Foreground="{StaticResource TextPrimaryBrush}" 
+                                      FontSize="12" 
+                                      Margin="0,8,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Card 3: Hotkeys -->
+                    <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource SubtleBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12">
+                        <StackPanel>
+                            <TextBlock Text="Глобальные горячие клавиши" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
+                            <TextBlock Text="Показать / скрыть окно: Shift + 2" Foreground="{StaticResource TextPrimaryBrush}" FontSize="12" Margin="0,6,0,0"/>
+                            <TextBlock Text="Сквозной клик (Ghost Mode): Ctrl + 1" Foreground="{StaticResource TextPrimaryBrush}" FontSize="12" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Footer: Save & Close -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Button Click="Save_Click" Content="Сохранить" Background="{StaticResource AccentGreenBrush}" Foreground="White" Padding="16,6" BorderThickness="0" Cursor="Hand">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="6"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>
