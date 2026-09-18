@@ -1068,6 +1068,7 @@ struct AudioNotesView: View {
     @ObservedObject var audioManager = AudioManager.shared
     @State private var copiedNoteId: String?
     @State private var addedToNotesId: String?
+    @State private var selectedFrequency: Double = 1000.0
     
     var body: some View {
         VStack(spacing: 0) {
@@ -1166,59 +1167,77 @@ struct AudioNotesView: View {
                 }
             }
             
-            // SFX & Audio Utilities Bar (Censor Beep 1000Hz + Target LUFS)
+            // SFX & Audio Utilities Bar (Multi-Frequency Tone Generator)
             VStack(spacing: 4) {
                 Divider().background(Color.white.opacity(0.1))
-                HStack(spacing: 8) {
+                HStack(spacing: 6) {
                     Image(systemName: "waveform.path.badge.plus")
                         .font(.system(size: 11))
                         .foregroundColor(.yellow)
                     
-                    Text("Цензурный BEEP 1000Hz")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundColor(.white.opacity(0.85))
+                    // Frequency Selector
+                    Picker("", selection: $selectedFrequency) {
+                        Text("440 Hz").tag(440.0)
+                        Text("800 Hz").tag(800.0)
+                        Text("1 kHz").tag(1000.0)
+                        Text("2 kHz").tag(2000.0)
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 170)
+                    .controlSize(.mini)
                     
                     Spacer()
                     
                     // Play test tone
                     Button(action: {
-                        audioManager.playBeep()
+                        audioManager.playTone(frequency: selectedFrequency)
                     }) {
+                        Image(systemName: "speaker.wave.2.fill")
+                            .font(.system(size: 10))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
+                            .background(Color.yellow.opacity(0.2))
+                            .foregroundColor(.yellow)
+                            .cornerRadius(4)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Прослушать тон \(Int(selectedFrequency)) Гц")
+                    
+                    // Drag-and-drop to Timeline badge
+                    if let url = audioManager.generateToneWav(frequency: selectedFrequency) {
                         HStack(spacing: 3) {
-                            Image(systemName: "speaker.wave.2.fill")
-                                .font(.system(size: 8))
-                            Text("Тест")
-                                .font(.system(size: 9, weight: .bold))
+                            Image(systemName: "arrow.up.right.and.arrow.down.left.rectangle")
+                                .font(.system(size: 9))
+                            Text("WAV")
+                                .font(.system(size: 10, weight: .bold))
                         }
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color.yellow.opacity(0.2))
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(Color.yellow.opacity(0.25))
                         .foregroundColor(.yellow)
                         .cornerRadius(4)
-                    }
-                    .buttonStyle(.plain)
-                    .help("Прослушать 1-секундный тон цензуры 1000 Гц (-18 dBFS)")
-                    
-                    // Drag / Reveal to Finder
-                    Button(action: {
-                        if let url = audioManager.generateCensorBeepWav() {
-                            NSWorkspace.shared.activateFileViewerSelecting([url])
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4)
+                                .stroke(Color.yellow.opacity(0.6), lineWidth: 1)
+                        )
+                        .onDrag {
+                            NSItemProvider(contentsOf: url) ?? NSItemProvider()
                         }
-                    }) {
-                        HStack(spacing: 3) {
-                            Image(systemName: "arrow.down.doc.fill")
-                                .font(.system(size: 8))
-                            Text("Файл WAV")
-                                .font(.system(size: 9, weight: .bold))
+                        .help("Перетащите мышкой прямо на аудиодорожку в DaVinci, Premiere или FCPX!")
+                        
+                        // Finder reveal (robust via NSWorkspace and bash fallback)
+                        Button(action: {
+                            if !NSWorkspace.shared.selectFile(url.path, inFileViewerRootedAtPath: audioManager.audioFolderURL.path) {
+                                NSWorkspace.shared.open(audioManager.audioFolderURL)
+                            }
+                        }) {
+                            Image(systemName: "folder")
+                                .font(.system(size: 10))
+                                .foregroundColor(.white.opacity(0.7))
                         }
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color.white.opacity(0.12))
-                        .foregroundColor(.white)
-                        .cornerRadius(4)
+                        .buttonStyle(.plain)
+                        .help("Показать файл в Finder")
                     }
-                    .buttonStyle(.plain)
-                    .help("Показать WAV-файл в Finder (можно перетащить на таймлайн)")
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)

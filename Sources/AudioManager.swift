@@ -266,20 +266,20 @@ final class AudioManager: NSObject, ObservableObject, AVAudioRecorderDelegate, A
         return String(format: "%02d:%02d", mins, secs)
     }
     
-    // MARK: - SFX Generator (Censor Beep 1000Hz & Test Tones)
-    func generateCensorBeepWav() -> URL? {
-        let fileURL = audioFolderURL.appendingPathComponent("FloatNote_Censor_Beep_1000Hz.wav")
+    // MARK: - SFX Generator (Censor Beep & Test Tones with selectable Frequency)
+    func generateToneWav(frequency: Double = 1000.0) -> URL? {
+        let freqInt = Int(frequency)
+        let fileURL = audioFolderURL.appendingPathComponent("FloatNote_Tone_\(freqInt)Hz.wav")
         if FileManager.default.fileExists(atPath: fileURL.path) {
             return fileURL
         }
         
         let sampleRate: Double = 44100.0
         let duration: Double = 1.0 // 1 second
-        let frequency: Double = 1000.0 // 1000 Hz
         let totalSamples = Int(sampleRate * duration)
         
         var audioData = Data()
-        // Generate 16-bit PCM Sine Wave at -18 dBFS (approx amplitude 0.125)
+        // Generate 16-bit PCM Sine Wave at -18 dBFS (amplitude ~0.25)
         let amplitude: Double = 0.25 * Double(Int16.max)
         for i in 0..<totalSamples {
             let value = sin(2.0 * .pi * frequency * Double(i) / sampleRate) * amplitude
@@ -326,8 +326,8 @@ final class AudioManager: NSObject, ObservableObject, AVAudioRecorderDelegate, A
         }
     }
     
-    func playBeep() {
-        if let url = generateCensorBeepWav() {
+    func playTone(frequency: Double = 1000.0) {
+        if let url = generateToneWav(frequency: frequency) {
             play(url: url)
         }
     }

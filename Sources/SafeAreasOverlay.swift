@@ -56,15 +56,30 @@ final class SafeAreasManager: ObservableObject {
     private func updateAspectRatio() {
         guard let panel = overlayPanel else { return }
         let currentFrame = panel.frame
+        let screen = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+        
+        let baseDimension: CGFloat = min(screen.height * 0.70, 640)
+        let targetWidth: CGFloat
+        let targetHeight: CGFloat
+        
         if mode == .vertical {
             panel.aspectRatio = NSSize(width: 9, height: 16)
-            let newWidth = currentFrame.height * (9.0 / 16.0)
-            panel.setFrame(NSRect(x: currentFrame.midX - (newWidth / 2.0), y: currentFrame.origin.y, width: newWidth, height: currentFrame.height), display: true, animate: true)
+            targetHeight = baseDimension
+            targetWidth = baseDimension * (9.0 / 16.0)
         } else {
             panel.aspectRatio = NSSize(width: 16, height: 9)
-            let newHeight = currentFrame.width * (9.0 / 16.0)
-            panel.setFrame(NSRect(x: currentFrame.origin.x, y: currentFrame.midY - (newHeight / 2.0), width: currentFrame.width, height: newHeight), display: true, animate: true)
+            targetWidth = min(screen.width * 0.65, baseDimension * (16.0 / 9.0))
+            targetHeight = targetWidth * (9.0 / 16.0)
         }
+        
+        let newX = currentFrame.midX - (targetWidth / 2.0)
+        let newY = currentFrame.midY - (targetHeight / 2.0)
+        
+        let safeX = max(screen.minX + 20, min(newX, screen.maxX - targetWidth - 20))
+        let safeY = max(screen.minY + 20, min(newY, screen.maxY - targetHeight - 20))
+        
+        let targetRect = NSRect(x: safeX, y: safeY, width: targetWidth, height: targetHeight)
+        panel.setFrame(targetRect, display: true, animate: false)
     }
     
     private func setupPanel() {
