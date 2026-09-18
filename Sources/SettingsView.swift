@@ -70,12 +70,7 @@ struct SettingsView: View {
                 
                 Toggle("Закреплять окно поверх всех окон (Pin)", isOn: $storage.preferences.isPinned)
                     .toggleStyle(SwitchToggleStyle(tint: Color(red: 0.18, green: 0.78, blue: 0.35)))
-                    .onChange(of: storage.preferences.isPinned) { newValue in
-                        if let panel = NSApp.keyWindow as? FloatingPanel ?? NSApp.windows.first(where: { $0 is FloatingPanel }) as? FloatingPanel {
-                            panel.setPinned(newValue)
-                        }
-                        (NSApp.delegate as? AppDelegate)?.updateMenu()
-                    }
+                    .modifier(OnChangePinnedModifier(value: storage.preferences.isPinned))
             }
             .padding(12)
             .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
@@ -264,5 +259,27 @@ struct SettingsView: View {
         storage.preferences.fontSize = 14.0
         loadCurrentSettings()
         HotkeyManager.shared.updateHotkeys(from: storage.preferences)
+    }
+}
+
+// MARK: - Compatibility modifier for onChange (macOS 13 / 14+)
+private struct OnChangePinnedModifier: ViewModifier {
+    let value: Bool
+    func body(content: Content) -> some View {
+        if #available(macOS 14.0, *) {
+            content.onChange(of: value) { _, newValue in
+                if let panel = NSApp.keyWindow as? FloatingPanel ?? NSApp.windows.first(where: { $0 is FloatingPanel }) as? FloatingPanel {
+                    panel.setPinned(newValue)
+                }
+                (NSApp.delegate as? AppDelegate)?.updateMenu()
+            }
+        } else {
+            content.onChange(of: value) { newValue in
+                if let panel = NSApp.keyWindow as? FloatingPanel ?? NSApp.windows.first(where: { $0 is FloatingPanel }) as? FloatingPanel {
+                    panel.setPinned(newValue)
+                }
+                (NSApp.delegate as? AppDelegate)?.updateMenu()
+            }
+        }
     }
 }

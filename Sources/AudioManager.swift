@@ -38,10 +38,10 @@ final class AudioManager: NSObject, ObservableObject, AVAudioRecorderDelegate, A
         self.audioFolderURL = baseDir
         self.notesFolderURL = notesDir
         super.init()
-        loadAudioNotes()
+        Task { await loadAudioNotes() }
     }
     
-    func loadAudioNotes() {
+    func loadAudioNotes() async {
         guard let files = try? FileManager.default.contentsOfDirectory(at: audioFolderURL, includingPropertiesForKeys: [.creationDateKey], options: .skipsHiddenFiles) else {
             return
         }
@@ -53,9 +53,13 @@ final class AudioManager: NSObject, ObservableObject, AVAudioRecorderDelegate, A
             let attrs = try? FileManager.default.attributesOfItem(atPath: url.path)
             let date = attrs?[.creationDate] as? Date ?? Date()
             
-            // Get duration
             let asset = AVURLAsset(url: url)
-            let durationSeconds = CMTimeGetSeconds(asset.duration)
+            let durationSeconds: Double
+            if #available(macOS 13.0, *) {
+                durationSeconds = (try? await asset.load(.duration)).map { CMTimeGetSeconds($0) } ?? 0
+            } else {
+                durationSeconds = CMTimeGetSeconds(asset.duration)
+            }
             let durationStr = formatDuration(durationSeconds)
             
             // Check for existing transcript file
@@ -123,7 +127,7 @@ final class AudioManager: NSObject, ObservableObject, AVAudioRecorderDelegate, A
         recordingDuration = 0
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.loadAudioNotes()
+            Task { await self.loadAudioNotes() }
             if let url = recordedURL {
                 self.transcribeAudio(url: url)
             }
@@ -229,7 +233,7 @@ final class AudioManager: NSObject, ObservableObject, AVAudioRecorderDelegate, A
         try? FileManager.default.removeItem(at: url)
         let txtURL = url.deletingPathExtension().appendingPathExtension("txt")
         try? FileManager.default.removeItem(at: txtURL)
-        loadAudioNotes()
+        Task { await loadAudioNotes() }
     }
     
     func revealInFinder(url: URL) {

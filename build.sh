@@ -66,6 +66,7 @@ EOF
 # Compile Swift sources
 echo "Компиляция Swift исходников..."
 swiftc -O -sdk "$SDK_PATH" \
+    -target arm64-apple-macos13.0 \
     "$DIR/Sources/Storage.swift" \
     "$DIR/Sources/HotkeyManager.swift" \
     "$DIR/Sources/FloatingPanel.swift" \

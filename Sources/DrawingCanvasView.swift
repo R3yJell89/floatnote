@@ -622,9 +622,9 @@ struct DrawingCanvasView: View {
                 .onAppear {
                     canvasSize = geo.size
                 }
-                .onChange(of: geo.size) { newSize in
+                .modifier(OnChangeCanvasSizeModifier(size: geo.size, onChanged: { newSize in
                     canvasSize = newSize
-                }
+                }))
             }
             .onReceive(NotificationCenter.default.publisher(for: .undoRequested)) { _ in
                 undoLastStroke()
@@ -701,6 +701,19 @@ struct DrawingCanvasView: View {
                     self.backgroundImage = image
                 }
             }
+        }
+    }
+}
+
+// MARK: - Compatibility modifier for onChange(of:) CGSize (macOS 13 / 14+)
+private struct OnChangeCanvasSizeModifier: ViewModifier {
+    let size: CGSize
+    let onChanged: (CGSize) -> Void
+    func body(content: Content) -> some View {
+        if #available(macOS 14.0, *) {
+            content.onChange(of: size) { _, newSize in onChanged(newSize) }
+        } else {
+            content.onChange(of: size) { newSize in onChanged(newSize) }
         }
     }
 }
