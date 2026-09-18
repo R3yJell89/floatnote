@@ -613,16 +613,12 @@ struct ContentView: View {
                 
                 // Quick Insert Timecode button
                 Button(action: {
-                    let pb = NSPasteboard.general.string(forType: .string) ?? ""
-                    let tcPattern = #"(\d{2}:\d{2}:\d{2}[:;]\d{2})"#
-                    var tcToInsert = "01:00:00:00"
-                    if let range = pb.range(of: tcPattern, options: .regularExpression) {
-                        tcToInsert = String(pb[range])
-                    }
-                    if newTaskText.isEmpty {
-                        newTaskText = "[\(tcToInsert)] "
-                    } else {
-                        newTaskText += " [\(tcToInsert)]"
+                    fetchCurrentTimecode { tc in
+                        if newTaskText.isEmpty {
+                            newTaskText = "[\(tc)] "
+                        } else {
+                            newTaskText += " [\(tc)]"
+                        }
                     }
                 }) {
                     HStack(spacing: 2) {
@@ -638,7 +634,7 @@ struct ContentView: View {
                     .cornerRadius(4)
                 }
                 .buttonStyle(.plain)
-                .help("Вставить таймкод (из буфера или шаблон [01:00:00:00])")
+                .help("Вставить текущий таймкод плейхеда DaVinci (или из буфера)")
             }
             .padding(.horizontal, 10)
             .padding(.top, 6)
@@ -743,6 +739,48 @@ struct ContentView: View {
         return nil
     }
     
+    private func fetchCurrentTimecode(completion: @escaping (String) -> Void) {
+        // First check clipboard for TC
+        let pb = NSPasteboard.general.string(forType: .string) ?? ""
+        let tcPattern = #"(\d{2}:\d{2}:\d{2}[:;]\d{2})"#
+        var fallbackTC = "01:00:00:00"
+        if let range = pb.range(of: tcPattern, options: .regularExpression) {
+            fallbackTC = String(pb[range])
+        }
+        
+        let scriptPath = NSString(string: "~/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility/FloatNote_Bridge.py").expandingTildeInPath
+        guard FileManager.default.fileExists(atPath: scriptPath) else {
+            completion(fallbackTC)
+            return
+        }
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            let proc = Process()
+            proc.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
+            proc.arguments = [scriptPath, "get_tc"]
+            let pipe = Pipe()
+            proc.standardOutput = pipe
+            proc.standardError = Pipe()
+            
+            do {
+                try proc.run()
+                proc.waitUntilExit()
+                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let liveTC = json["timecode"] as? String, !liveTC.isEmpty {
+                    DispatchQueue.main.async {
+                        completion(liveTC)
+                    }
+                    return
+                }
+            } catch {}
+            
+            DispatchQueue.main.async {
+                completion(fallbackTC)
+            }
+        }
+    }
+    
     private func checklistItemRow(item: Binding<ChecklistItem>) -> some View {
         let tc = extractTimecode(from: item.wrappedValue.text)
         
@@ -838,16 +876,12 @@ struct ContentView: View {
             HStack(spacing: 6) {
                 // Timecode
                 Button(action: {
-                    let pb = NSPasteboard.general.string(forType: .string) ?? ""
-                    let tcPattern = #"(\d{2}:\d{2}:\d{2}[:;]\d{2})"#
-                    var tcToInsert = "01:00:00:00"
-                    if let range = pb.range(of: tcPattern, options: .regularExpression) {
-                        tcToInsert = String(pb[range])
-                    }
-                    if storage.notesText.isEmpty {
-                        storage.notesText = "[\(tcToInsert)] "
-                    } else {
-                        storage.notesText += "\n[\(tcToInsert)] "
+                    fetchCurrentTimecode { tc in
+                        if storage.notesText.isEmpty {
+                            storage.notesText = "[\(tc)] "
+                        } else {
+                            storage.notesText += "\n[\(tc)] "
+                        }
                     }
                 }) {
                     HStack(spacing: 2) {
@@ -863,7 +897,7 @@ struct ContentView: View {
                     .cornerRadius(4)
                 }
                 .buttonStyle(.plain)
-                .help("Вставить таймкод (из буфера или шаблон [01:00:00:00])")
+                .help("Вставить текущий таймкод плейхеда DaVinci (или из буфера)")
                 
                 // Voice Dictation
                 Button(action: {
