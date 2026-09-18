@@ -109,23 +109,43 @@ public partial class MainWindow : Window
 
     private void AddTask()
     {
-        string text = NewTaskInput.Text.Trim();
-        if (string.IsNullOrEmpty(text)) return;
-
-        var (cleanTitle, timecode) = ChecklistItem.ParseInput(text);
-        var item = new ChecklistItem
+        try
         {
-            Title = cleanTitle,
-            Timecode = timecode
-        };
+            string text = NewTaskInput.Text.Trim();
+            if (string.IsNullOrEmpty(text)) return;
 
-        _storage.Checklist.Add(item);
-        _storage.SaveChecklist();
-        NewTaskInput.Clear();
+            var (cleanTitle, timecode) = ChecklistItem.ParseInput(text);
+            var item = new ChecklistItem
+            {
+                Title = cleanTitle,
+                Timecode = timecode
+            };
 
-        if (!string.IsNullOrEmpty(timecode) && _storage.Preferences.AutoCreateMarkers)
+            _storage.Checklist.Add(item);
+            _storage.SaveChecklist();
+            NewTaskInput.Clear();
+            NewTaskInput.Focus();
+
+            if (!string.IsNullOrEmpty(timecode) && _storage.Preferences.AutoCreateMarkers)
+            {
+                try
+                {
+                    NLEBridgeWindows.AddMarkerToNLE(timecode, cleanTitle, _storage.Preferences.TargetNLE);
+                }
+                catch { }
+            }
+        }
+        catch (Exception ex)
         {
-            NLEBridgeWindows.AddMarkerToNLE(timecode, cleanTitle, _storage.Preferences.TargetNLE);
+            System.Diagnostics.Debug.WriteLine($"AddTask error: {ex.Message}");
+        }
+    }
+
+    private void NewTaskInput_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (PlaceholderText != null)
+        {
+            PlaceholderText.Visibility = string.IsNullOrEmpty(NewTaskInput.Text) ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 

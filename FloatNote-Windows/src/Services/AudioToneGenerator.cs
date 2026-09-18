@@ -57,6 +57,23 @@ public static class AudioToneGenerator
         return filePath;
     }
 
+    public static bool IsPlaying => _activePlayer != null;
+    public static int? CurrentPlayingFrequency { get; private set; }
+
+    public static bool ToggleTone(int frequency = 1000)
+    {
+        if (IsPlaying && CurrentPlayingFrequency == frequency)
+        {
+            StopTone();
+            return false; // Stopped
+        }
+        else
+        {
+            PlayTone(frequency);
+            return true; // Started playing
+        }
+    }
+
     public static void PlayTone(int frequency = 1000)
     {
         try
@@ -64,6 +81,7 @@ public static class AudioToneGenerator
             StopTone();
             string wavFile = GenerateBeepWav(frequency);
             _activePlayer = new SoundPlayer(wavFile);
+            CurrentPlayingFrequency = frequency;
             _activePlayer.Play();
         }
         catch { }
@@ -76,6 +94,7 @@ public static class AudioToneGenerator
             _activePlayer?.Stop();
             _activePlayer?.Dispose();
             _activePlayer = null;
+            CurrentPlayingFrequency = null;
         }
         catch { }
     }

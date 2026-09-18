@@ -145,15 +145,38 @@
             </Grid>
 
             <!-- 4. Bottom Task Input Bar -->
-            <Border x:Name="BottomInputBar" Grid.Row="3" Background="#14FFFFFF" CornerRadius="0,0,10,10" Padding="10,6">
+            <Border x:Name="BottomInputBar" Grid.Row="3" Background="#1AFFFFFF" CornerRadius="0,0,10,10" Padding="10,8" Margin="0">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <TextBox x:Name="NewTaskInput" KeyDown="NewTaskInput_KeyDown" Background="Transparent" BorderThickness="0" Foreground="{StaticResource TextPrimaryBrush}" FontFamily="{StaticResource SegoeUIVariable}" FontSize="12" VerticalAlignment="Center"/>
-                    <Button Grid.Column="1" Click="AddTaskButton_Click" Background="Transparent" BorderThickness="0" Foreground="{StaticResource AccentGreenBrush}" FontSize="16" Content="➕" Cursor="Hand" Margin="6,0,0,0"/>
+                    <Grid Grid.Column="0">
+                        <!-- Placeholder text visible when empty -->
+                        <TextBlock x:Name="PlaceholderText" 
+                                   Text="Новая задача... (например: Срезать интро 01:00:15:00)" 
+                                   Foreground="{StaticResource TextSecondaryBrush}" 
+                                   FontSize="12" 
+                                   FontFamily="{StaticResource SegoeUIVariable}" 
+                                   VerticalAlignment="Center" 
+                                   Margin="4,0,0,0" 
+                                   IsHitTestVisible="False"/>
+                        <TextBox x:Name="NewTaskInput" 
+                                 KeyDown="NewTaskInput_KeyDown" 
+                                 TextChanged="NewTaskInput_TextChanged"
+                                 Background="Transparent" 
+                                 BorderThickness="0" 
+                                 CaretBrush="White"
+                                 Foreground="{StaticResource TextPrimaryBrush}" 
+                                 FontFamily="{StaticResource SegoeUIVariable}" 
+                                 FontSize="12" 
+                                 MinHeight="26"
+                                 VerticalAlignment="Center"
+                                 VerticalContentAlignment="Center"
+                                 Padding="4,2"/>
+                    </Grid>
+                    <Button Grid.Column="1" Click="AddTaskButton_Click" Background="Transparent" BorderThickness="0" Foreground="{StaticResource AccentGreenBrush}" FontSize="16" Content="➕" Cursor="Hand" Margin="8,0,0,0" ToolTip="Добавить задачу (Enter)"/>
                 </Grid>
             </Border>
         </Grid>

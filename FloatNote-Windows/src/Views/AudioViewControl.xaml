@@ -14,35 +14,29 @@
                 <TextBlock Text="Цензурный BEEP (Тестовый тон)" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
                 <TextBlock Text="Чистый синус 1000 Гц (-18 dBFS)" Foreground="{StaticResource TextPrimaryBrush}" FontSize="12" Margin="0,4,0,8"/>
 
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+                <!-- Row 1: Tone Buttons (Toggle Play/Stop) -->
+                <WrapPanel Orientation="Horizontal" Margin="0,4,0,8" VerticalAlignment="Center">
+                    <Button x:Name="BtnTone440" Click="Play440_Click" Content="440Hz" Padding="10,5" Background="#20FFFFFF" Foreground="White" BorderThickness="0" Margin="0,0,6,6" Cursor="Hand" ToolTip="Нажмите для включения / повторно для выключения"/>
+                    <Button x:Name="BtnTone1000" Click="Play1000_Click" Content="1000Hz (BEEP)" Padding="10,5" Background="{StaticResource AccentGreenBrush}" Foreground="White" BorderThickness="0" Margin="0,0,6,6" Cursor="Hand" ToolTip="Нажмите для включения / повторно для выключения"/>
+                    <Button x:Name="BtnTone2000" Click="Play2000_Click" Content="2000Hz" Padding="10,5" Background="#20FFFFFF" Foreground="White" BorderThickness="0" Margin="0,0,6,6" Cursor="Hand" ToolTip="Нажмите для включения / повторно для выключения"/>
+                    <Button x:Name="BtnStopTone" Click="StopTone_Click" Content="⏹ Стоп" Padding="10,5" Background="#33FF3B30" Foreground="#FF453A" BorderThickness="0" Margin="0,0,6,6" Cursor="Hand" ToolTip="Остановить звук"/>
+                </WrapPanel>
 
+                <!-- Row 2: Drag WAV to Timeline card -->
+                <Border PreviewMouseLeftButtonDown="WavBorder_PreviewMouseLeftButtonDown"
+                        Background="#25FFFFFF" 
+                        BorderBrush="{StaticResource SubtleBorderBrush}" 
+                        BorderThickness="1" 
+                        CornerRadius="6" 
+                        Padding="10,6" 
+                        HorizontalAlignment="Left"
+                        Cursor="Hand"
+                        ToolTip="Зажмите левой кнопкой мыши и перетащите в DaVinci / Premiere">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Click="Play440_Click" Content="440Hz" Padding="8,4" Background="#20FFFFFF" Foreground="White" BorderThickness="0" Margin="0,0,4,0" Cursor="Hand"/>
-                        <Button Click="Play1000_Click" Content="1000Hz" Padding="8,4" Background="{StaticResource AccentGreenBrush}" Foreground="White" BorderThickness="0" Margin="0,0,4,0" Cursor="Hand"/>
-                        <Button Click="Play2000_Click" Content="2000Hz" Padding="8,4" Background="#20FFFFFF" Foreground="White" BorderThickness="0" Margin="0,0,4,0" Cursor="Hand"/>
-                        <Button Click="StopTone_Click" Content="⏹ Стоп" Padding="8,4" Background="#33FF3B30" Foreground="#FF453A" BorderThickness="0" Cursor="Hand" ToolTip="Остановить звук"/>
+                        <TextBlock Text="💾" FontSize="13" Margin="0,0,6,0"/>
+                        <TextBlock Text="Перетащить WAV 1000Hz в таймлайн" Foreground="{StaticResource TextPrimaryBrush}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
                     </StackPanel>
-
-                    <!-- Drag to Timeline Button -->
-                    <Border Grid.Column="1" 
-                            PreviewMouseLeftButtonDown="WavBorder_PreviewMouseLeftButtonDown"
-                            Background="#33FFFFFF" 
-                            BorderBrush="{StaticResource SubtleBorderBrush}" 
-                            BorderThickness="1" 
-                            CornerRadius="6" 
-                            Padding="8,4" 
-                            Cursor="Hand"
-                            ToolTip="Зажмите и перетащите в таймлайн DaVinci / Premiere">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="💾" FontSize="12" Margin="0,0,4,0"/>
-                            <TextBlock Text="WAV в таймлайн" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
-                        </StackPanel>
-                    </Border>
-                </Grid>
+                </Border>
             </StackPanel>
         </Border>
 

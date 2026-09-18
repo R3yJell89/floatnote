@@ -21,10 +21,44 @@ public partial class AudioViewControl : UserControl
         VoiceNotesControl.ItemsSource = VoiceNotes;
     }
 
-    private void Play440_Click(object sender, RoutedEventArgs e) => AudioToneGenerator.PlayTone(440);
-    private void Play1000_Click(object sender, RoutedEventArgs e) => AudioToneGenerator.PlayTone(1000);
-    private void Play2000_Click(object sender, RoutedEventArgs e) => AudioToneGenerator.PlayTone(2000);
-    private void StopTone_Click(object sender, RoutedEventArgs e) => AudioToneGenerator.StopTone();
+    private void Play440_Click(object sender, RoutedEventArgs e)
+    {
+        AudioToneGenerator.ToggleTone(440);
+        UpdateToneButtonsUI();
+    }
+
+    private void Play1000_Click(object sender, RoutedEventArgs e)
+    {
+        AudioToneGenerator.ToggleTone(1000);
+        UpdateToneButtonsUI();
+    }
+
+    private void Play2000_Click(object sender, RoutedEventArgs e)
+    {
+        AudioToneGenerator.ToggleTone(2000);
+        UpdateToneButtonsUI();
+    }
+
+    private void StopTone_Click(object sender, RoutedEventArgs e)
+    {
+        AudioToneGenerator.StopTone();
+        UpdateToneButtonsUI();
+    }
+
+    private void UpdateToneButtonsUI()
+    {
+        bool playing = AudioToneGenerator.IsPlaying;
+        int? freq = AudioToneGenerator.CurrentPlayingFrequency;
+
+        if (BtnTone440 != null)
+            BtnTone440.Background = (playing && freq == 440) ? (System.Windows.Media.Brush)FindResource("AccentGreenBrush") : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0x20, 0xFF, 0xFF, 0xFF));
+
+        if (BtnTone1000 != null)
+            BtnTone1000.Background = (playing && freq == 1000) ? (System.Windows.Media.Brush)FindResource("AccentGreenBrush") : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0x35, 0xFF, 0xFF, 0xFF));
+
+        if (BtnTone2000 != null)
+            BtnTone2000.Background = (playing && freq == 2000) ? (System.Windows.Media.Brush)FindResource("AccentGreenBrush") : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0x20, 0xFF, 0xFF, 0xFF));
+    }
 
     private void WavBorder_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
