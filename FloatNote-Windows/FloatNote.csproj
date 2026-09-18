@@ -13,9 +13,12 @@
     <Product>FloatNote for Windows</Product>
     <Description>The Pro Video Editor Floating Companion Suite</Description>
 
-    <!-- Lightweight Optimizations: Single portable EXE with fast startup -->
+    <EnableDefaultPageItems>false</EnableDefaultPageItems>
+    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
+
+    <!-- Lightweight Self-Contained single exe: runs on ANY Windows without installing .NET -->
     <PublishSingleFile>true</PublishSingleFile>
-    <SelfContained>false</SelfContained>
+    <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
