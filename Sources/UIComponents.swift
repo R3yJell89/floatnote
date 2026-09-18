@@ -39,6 +39,67 @@ final class WindowDragNSView: NSView {
     }
 }
 
+// MARK: - Native macOS Traffic Light Window Buttons (Close & Minimize)
+
+struct WindowTrafficLights: View {
+    @State private var isHoveringAll = false
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            // Close Button (Red)
+            Button(action: {
+                (NSApp.delegate as? AppDelegate)?.toggleWindow()
+            }) {
+                ZStack {
+                    Circle()
+                        .fill(Color(red: 1.0, green: 0.37, blue: 0.34))
+                        .frame(width: 12, height: 12)
+                    Circle()
+                        .stroke(Color.black.opacity(0.18), lineWidth: 0.5)
+                        .frame(width: 12, height: 12)
+                    if isHoveringAll {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 7, weight: .black))
+                            .foregroundColor(Color.black.opacity(0.65))
+                    }
+                }
+                .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .help("Закрыть окно FloatNote")
+            
+            // Minimize Button (Yellow)
+            Button(action: {
+                (NSApp.delegate as? AppDelegate)?.toggleWindow()
+            }) {
+                ZStack {
+                    Circle()
+                        .fill(Color(red: 1.0, green: 0.74, blue: 0.18))
+                        .frame(width: 12, height: 12)
+                    Circle()
+                        .stroke(Color.black.opacity(0.18), lineWidth: 0.5)
+                        .frame(width: 12, height: 12)
+                    if isHoveringAll {
+                        Image(systemName: "minus")
+                            .font(.system(size: 7, weight: .black))
+                            .foregroundColor(Color.black.opacity(0.65))
+                    }
+                }
+                .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .help("Свернуть окно FloatNote")
+        }
+        .padding(.horizontal, 4)
+        .padding(.vertical, 4)
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.12)) {
+                isHoveringAll = hovering
+            }
+        }
+    }
+}
+
 // MARK: - Native Mac Text Editor
 
 class CustomTextView: NSTextView {

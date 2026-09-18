@@ -56,11 +56,14 @@ struct ContentView: View {
         VStack(spacing: 6) {
             // Tier 1: Title / Drag Handle + Actions Bar
             HStack(spacing: 4) {
-                // Title and Pin Button (High Layout Priority to NEVER squash or shift)
-                HStack(spacing: 5) {
-                    // Pin Button (Clicking pin hides the window)
+                // macOS Traffic Lights (Close & Minimize) + Title and Pin Button
+                HStack(spacing: 8) {
+                    WindowTrafficLights()
+                        .padding(.trailing, 2)
+                    
+                    // Pin Button (Pins window floating on top)
                     Button(action: {
-                        (NSApp.delegate as? AppDelegate)?.toggleWindow()
+                        (NSApp.delegate as? AppDelegate)?.togglePin()
                     }) {
                         ZStack {
                             RoundedRectangle(cornerRadius: 6)
@@ -71,12 +74,12 @@ struct ContentView: View {
                                 .font(.system(size: 13, weight: .bold))
                                 .foregroundColor(storage.preferences.isPinned ? Color(red: 0.18, green: 0.78, blue: 0.35) : Color.white.opacity(0.55))
                         }
-                        .frame(width: 28, height: 28)
+                        .frame(width: 26, height: 26)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .contentShape(Rectangle())
-                    .help("Скрыть окно (\(storage.preferences.toggleWindowHotkey.displayString))")
+                    .help(storage.preferences.isPinned ? "Окно закреплено поверх всех (нажмите для открепления)" : "Закрепить окно поверх всех")
                     
                     // App Title
                     Text("FloatNote")
