@@ -94,6 +94,53 @@ struct DrawingStroke: Identifiable {
     }
 }
 
+// MARK: - Codable Stroke Representation for State Persistence
+
+struct DrawingStrokeCodable: Codable {
+    var tool: String
+    var points: [[CGFloat]]
+    var startPoint: [CGFloat]
+    var endPoint: [CGFloat]
+    var red: Double
+    var green: Double
+    var blue: Double
+    var opacity: Double
+    var lineWidth: CGFloat
+    
+    init(from stroke: DrawingStroke) {
+        self.tool = stroke.tool.rawValue
+        self.points = stroke.points.map { [$0.x, $0.y] }
+        self.startPoint = [stroke.startPoint.x, stroke.startPoint.y]
+        self.endPoint = [stroke.endPoint.x, stroke.endPoint.y]
+        self.lineWidth = stroke.lineWidth
+        
+        let nsColor = NSColor(stroke.color).usingColorSpace(.sRGB) ?? NSColor.white
+        self.red = Double(nsColor.redComponent)
+        self.green = Double(nsColor.greenComponent)
+        self.blue = Double(nsColor.blueComponent)
+        self.opacity = Double(nsColor.alphaComponent)
+    }
+    
+    func toStroke() -> DrawingStroke {
+        let drawingTool = DrawingTool(rawValue: tool) ?? .pen
+        let pts = points.compactMap { arr -> CGPoint? in
+            guard arr.count == 2 else { return nil }
+            return CGPoint(x: arr[0], y: arr[1])
+        }
+        let sp = startPoint.count == 2 ? CGPoint(x: startPoint[0], y: startPoint[1]) : .zero
+        let ep = endPoint.count == 2 ? CGPoint(x: endPoint[0], y: endPoint[1]) : .zero
+        let col = Color(red: red, green: green, blue: blue, opacity: opacity)
+        return DrawingStroke(
+            tool: drawingTool,
+            points: pts,
+            startPoint: sp,
+            endPoint: ep,
+            color: col,
+            lineWidth: lineWidth
+        )
+    }
+}
+
 // MARK: - Saved Sketch Model
 
 struct SavedSketch: Identifiable {
@@ -110,12 +157,63 @@ final class SketchManager: ObservableObject {
     
     @Published var savedSketches: [SavedSketch] = []
     let sketchesFolderURL: URL
+    private let stateFileURL: URL
+    private let stateBackgroundURL: URL
     
     init() {
         let baseDir = AppConstants.filesDirectory.appendingPathComponent("Скетчи", isDirectory: true)
         try? FileManager.default.createDirectory(at: baseDir, withIntermediateDirectories: true)
         self.sketchesFolderURL = baseDir
+        
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let appFolder = appSupport.appendingPathComponent("FloatNote", isDirectory: true)
+        try? FileManager.default.createDirectory(at: appFolder, withIntermediateDirectories: true)
+        self.stateFileURL = appFolder.appendingPathComponent("canvas_state.json")
+        self.stateBackgroundURL = appFolder.appendingPathComponent("canvas_bg.png")
+        
         loadSketches()
+    }
+    
+    var hasSavedState: Bool {
+        return FileManager.default.fileExists(atPath: stateFileURL.path)
+    }
+    
+    func saveCanvasState(strokes: [DrawingStroke], backgroundImage: NSImage?) {
+        let codables = strokes.map { DrawingStrokeCodable(from: $0) }
+        if let data = try? JSONEncoder().encode(codables) {
+            try? data.write(to: stateFileURL)
+        }
+        
+        if let bg = backgroundImage,
+           let tiff = bg.tiffRepresentation,
+           let rep = NSBitmapImageRep(data: tiff),
+           let png = rep.representation(using: .png, properties: [:]) {
+            try? png.write(to: stateBackgroundURL)
+        } else {
+            try? FileManager.default.removeItem(at: stateBackgroundURL)
+        }
+    }
+    
+    func loadCanvasState() -> (strokes: [DrawingStroke], backgroundImage: NSImage?) {
+        var strokes: [DrawingStroke] = []
+        var bgImage: NSImage? = nil
+        
+        if let data = try? Data(contentsOf: stateFileURL),
+           let codables = try? JSONDecoder().decode([DrawingStrokeCodable].self, from: data) {
+            strokes = codables.map { $0.toStroke() }
+        }
+        
+        if FileManager.default.fileExists(atPath: stateBackgroundURL.path),
+           let image = NSImage(contentsOf: stateBackgroundURL) {
+            bgImage = image
+        }
+        
+        return (strokes, bgImage)
+    }
+    
+    func clearCanvasState() {
+        try? FileManager.default.removeItem(at: stateFileURL)
+        try? FileManager.default.removeItem(at: stateBackgroundURL)
     }
     
     func loadSketches() {
@@ -358,7 +456,10 @@ struct DrawingCanvasView: View {
                     .help(backgroundImage != nil ? "Сделать новый снимок кадра (выделение области)" : "Снимок кадра DaVinci / экрана в холст")
                     
                     if backgroundImage != nil {
-                        Button(action: { backgroundImage = nil }) {
+                        Button(action: {
+                            backgroundImage = nil
+                            persistState()
+                        }) {
                             ZStack {
                                 RoundedRectangle(cornerRadius: 5)
                                     .fill(Color.red.opacity(0.2))
@@ -392,20 +493,24 @@ struct DrawingCanvasView: View {
                     .help("Отменить последнее действие (Cmd+Z)")
                     
                     // Clear
-                    Button(action: { strokes.removeAll() }) {
+                    Button(action: {
+                        strokes.removeAll()
+                        backgroundImage = nil
+                        sketchManager.clearCanvasState()
+                    }) {
                         ZStack {
                             RoundedRectangle(cornerRadius: 5)
                                 .fill(Color.white.opacity(0.06))
                             Image(systemName: "trash")
                                 .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(strokes.isEmpty ? .white.opacity(0.25) : .red.opacity(0.85))
+                                .foregroundColor((strokes.isEmpty && backgroundImage == nil) ? .white.opacity(0.25) : .red.opacity(0.85))
                         }
                         .frame(width: 28, height: 26)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .contentShape(Rectangle())
-                    .disabled(strokes.isEmpty)
+                    .disabled(strokes.isEmpty && backgroundImage == nil)
                     .help("Очистить холст")
                     
                     // Save PNG
@@ -592,11 +697,13 @@ struct DrawingCanvasView: View {
                                     if finished.tool == .pen || finished.tool == .eraser {
                                         if finished.points.count > 1 {
                                             strokes.append(finished)
+                                            persistState()
                                         }
                                     } else {
                                         let dist = hypot(finished.endPoint.x - finished.startPoint.x, finished.endPoint.y - finished.startPoint.y)
                                         if dist > 3 {
                                             strokes.append(finished)
+                                            persistState()
                                         }
                                     }
                                 }
@@ -647,7 +754,11 @@ struct DrawingCanvasView: View {
                 }
                 .onAppear {
                     canvasSize = geo.size
-                    if strokes.isEmpty {
+                    if sketchManager.hasSavedState {
+                        let saved = sketchManager.loadCanvasState()
+                        self.strokes = saved.strokes
+                        self.backgroundImage = saved.backgroundImage
+                    } else if strokes.isEmpty {
                         loadInitialArtwork(width: geo.size.width > 50 ? geo.size.width : 475, height: geo.size.height > 50 ? geo.size.height : 360)
                     }
                 }
@@ -709,9 +820,14 @@ struct DrawingCanvasView: View {
         }
     }
     
+    private func persistState() {
+        sketchManager.saveCanvasState(strokes: strokes, backgroundImage: backgroundImage)
+    }
+    
     private func undoLastStroke() {
         if !strokes.isEmpty {
             strokes.removeLast()
+            persistState()
         }
     }
     
@@ -728,6 +844,7 @@ struct DrawingCanvasView: View {
                 self.isCapturing = false
                 if let image = NSImage(pasteboard: NSPasteboard.general) {
                     self.backgroundImage = image
+                    self.persistState()
                 }
             }
         }

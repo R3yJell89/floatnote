@@ -111,6 +111,8 @@ final class SafeAreasManager: ObservableObject {
         panel.aspectRatio = NSSize(width: 9, height: 16)
         panel.minSize = NSSize(width: 200, height: 200)
         panel.ignoresMouseEvents = false
+        panel.isMovable = true
+        panel.isMovableByWindowBackground = true
         
         let hostingView = FirstMouseHostingView(rootView: SafeAreasView())
         panel.contentView = hostingView
@@ -270,14 +272,23 @@ struct SafeAreasView: View {
                         .buttonStyle(.plain)
                         .help("Переключить соотношение 9:16 / 16:9")
                         
-                        // Draggable Handle
+                        // Draggable Handle - clear & prominent grip bar
                         WindowDragArea()
-                            .frame(width: 40, height: 20)
+                            .frame(height: 22)
+                            .frame(minWidth: 80)
                             .overlay(
-                                Image(systemName: "line.3.horizontal")
-                                    .font(.system(size: 9, weight: .bold))
-                                    .foregroundColor(.white.opacity(0.4))
+                                HStack(spacing: 4) {
+                                    Image(systemName: "hand.draw")
+                                        .font(.system(size: 10, weight: .bold))
+                                    Text("Тянуть")
+                                        .font(.system(size: 10, weight: .semibold))
+                                }
+                                .foregroundColor(.white.opacity(0.8))
+                                .allowsHitTesting(false)
                             )
+                            .background(Color.white.opacity(0.12))
+                            .cornerRadius(4)
+                            .help("Зажмите и тяните мышью, чтобы переместить оверлей")
                         
                         // Cheat Sheet button
                         Button(action: { manager.showCheatSheet.toggle() }) {

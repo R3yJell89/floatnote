@@ -37,10 +37,18 @@ final class WindowDragNSView: NSView {
     
     private var initialMouseLocation: NSPoint?
     private var initialWindowOrigin: NSPoint?
+    private var isDragging: Bool = false
+    
+    override func resetCursorRects() {
+        super.resetCursorRects()
+        addCursorRect(bounds, cursor: isDragging ? .closedHand : .openHand)
+    }
     
     override func mouseDown(with event: NSEvent) {
         initialMouseLocation = NSEvent.mouseLocation
         initialWindowOrigin = window?.frame.origin
+        isDragging = true
+        window?.invalidateCursorRects(for: self)
         window?.performDrag(with: event)
     }
     
@@ -61,6 +69,8 @@ final class WindowDragNSView: NSView {
     override func mouseUp(with event: NSEvent) {
         initialMouseLocation = nil
         initialWindowOrigin = nil
+        isDragging = false
+        window?.invalidateCursorRects(for: self)
         super.mouseUp(with: event)
     }
 }

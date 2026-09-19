@@ -19,16 +19,30 @@ struct ChecklistView: View {
                 Menu {
                     Section("Готовые шаблоны") {
                         ForEach(TemplateManager.builtInTemplates) { tmpl in
-                            Button(tmpl.name) {
-                                templateManager.applyTemplate(tmpl, replace: false)
+                            Menu(tmpl.name) {
+                                Button("Добавить к текущим") {
+                                    templateManager.applyTemplate(tmpl, replace: false)
+                                }
+                                Button("Заменить текущий список") {
+                                    templateManager.applyTemplate(tmpl, replace: true)
+                                }
                             }
                         }
                     }
                     if !templateManager.customTemplates.isEmpty {
                         Section("Мои шаблоны") {
                             ForEach(templateManager.customTemplates) { tmpl in
-                                Button(tmpl.name) {
-                                    templateManager.applyTemplate(tmpl, replace: false)
+                                Menu(tmpl.name) {
+                                    Button("Добавить к текущим") {
+                                        templateManager.applyTemplate(tmpl, replace: false)
+                                    }
+                                    Button("Заменить текущий список") {
+                                        templateManager.applyTemplate(tmpl, replace: true)
+                                    }
+                                    Divider()
+                                    Button("🗑 Удалить шаблон", role: .destructive) {
+                                        templateManager.deleteTemplate(id: tmpl.id)
+                                    }
                                 }
                             }
                         }
@@ -36,6 +50,12 @@ struct ChecklistView: View {
                     Divider()
                     Button("💾 Сохранить список как шаблон...") {
                         saveCurrentAsTemplatePrompt()
+                    }
+                    if !storage.items.isEmpty {
+                        Divider()
+                        Button("🧹 Очистить весь чеклист", role: .destructive) {
+                            storage.items.removeAll()
+                        }
                     }
                 } label: {
                     HStack(spacing: 3) {
