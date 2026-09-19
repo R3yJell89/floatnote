@@ -34,8 +34,34 @@ struct WindowDragArea: NSViewRepresentable {
 
 final class WindowDragNSView: NSView {
     override var mouseDownCanMoveWindow: Bool { true }
+    
+    private var initialMouseLocation: NSPoint?
+    private var initialWindowOrigin: NSPoint?
+    
     override func mouseDown(with event: NSEvent) {
+        initialMouseLocation = NSEvent.mouseLocation
+        initialWindowOrigin = window?.frame.origin
         window?.performDrag(with: event)
+    }
+    
+    override func mouseDragged(with event: NSEvent) {
+        guard let startMouse = initialMouseLocation,
+              let startOrigin = initialWindowOrigin,
+              let win = window else {
+            super.mouseDragged(with: event)
+            return
+        }
+        let currentMouse = NSEvent.mouseLocation
+        let deltaX = currentMouse.x - startMouse.x
+        let deltaY = currentMouse.y - startMouse.y
+        let newOrigin = NSPoint(x: startOrigin.x + deltaX, y: startOrigin.y + deltaY)
+        win.setFrameOrigin(newOrigin)
+    }
+    
+    override func mouseUp(with event: NSEvent) {
+        initialMouseLocation = nil
+        initialWindowOrigin = nil
+        super.mouseUp(with: event)
     }
 }
 

@@ -93,6 +93,16 @@ struct ContentView: View {
                 // Center Drag Area (flexible, fills available space, separate from buttons)
                 WindowDragArea()
                     .frame(maxWidth: .infinity, maxHeight: 28)
+                    .overlay(
+                        HStack(spacing: 3) {
+                            ForEach(0..<4) { _ in
+                                Circle()
+                                    .fill(Color.white.opacity(0.18))
+                                    .frame(width: 3, height: 3)
+                            }
+                        }
+                    )
+                    .contentShape(Rectangle())
                 
                 // Action Buttons with FULL-BODY RECTANGULAR HIT TARGETS (compact 26x26)
                 HStack(spacing: 3) {

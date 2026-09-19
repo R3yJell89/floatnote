@@ -26,10 +26,11 @@ final class FloatingPanel: NSPanel {
         )
         
         self.isFloatingPanel = true
+        self.isMovable = true
         self.setPinned(StorageManager.shared.preferences.isPinned)
         
         self.hidesOnDeactivate = false
-        // Dragging is handled only via the top header bar to prevent drawing gestures from moving the window
+        // Dragging is handled via WindowDragArea and header bar
         self.isMovableByWindowBackground = false
         self.titlebarAppearsTransparent = true
         self.titleVisibility = .hidden
@@ -136,7 +137,6 @@ final class FloatingPanel: NSPanel {
             self.collectionBehavior = [
                 .canJoinAllSpaces,
                 .fullScreenAuxiliary,
-                .stationary,
                 .ignoresCycle
             ]
             self.orderFrontRegardless()
