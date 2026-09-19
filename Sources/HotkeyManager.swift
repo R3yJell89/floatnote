@@ -73,11 +73,19 @@ final class HotkeyManager {
     private var toggleGhostRef: EventHotKeyRef?
     private var handlerRef: EventHandlerRef?
     
+    private var globalEventMonitor: Any?
+    private var localEventMonitor: Any?
+    
+    // Cached hotkey configs for NSEvent monitors fallback
+    private var currentWindowConfig: HotkeyConfig?
+    private var currentGhostConfig: HotkeyConfig?
+    
     private init() {
-        setupHandler()
+        setupCarbonHandler()
+        setupEventMonitors()
     }
     
-    private func setupHandler() {
+    private func setupCarbonHandler() {
         var eventType = EventTypeSpec(
             eventClass: OSType(kEventClassKeyboard),
             eventKind: UInt32(kEventHotKeyPressed)
@@ -104,13 +112,79 @@ final class HotkeyManager {
         }
         
         InstallEventHandler(
-            GetEventDispatcherTarget(),
+            GetApplicationEventTarget(),
             handler,
             1,
             &eventType,
             nil,
             &handlerRef
         )
+    }
+    
+    private func setupEventMonitors() {
+        // Global monitor for when other apps (DaVinci, Final Cut, etc.) are focused
+        globalEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            self?.handleKeyEvent(event)
+        }
+        
+        // Local monitor for when FloatNote window is focused
+        localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            if self?.handleKeyEvent(event) == true {
+                return nil // Consume event
+            }
+            return event
+        }
+    }
+    
+    @discardableResult
+    private func handleKeyEvent(_ event: NSEvent) -> Bool {
+        let code = UInt32(event.keyCode)
+        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        
+        let hasCmd = flags.contains(.command)
+        let hasOpt = flags.contains(.option)
+        let hasCtrl = flags.contains(.control)
+        let hasShift = flags.contains(.shift)
+        
+        // Check window toggle
+        if let win = currentWindowConfig {
+            let winCmd = (win.carbonModifiers & UInt32(cmdKey)) != 0
+            let winOpt = (win.carbonModifiers & UInt32(optionKey)) != 0
+            let winCtrl = (win.carbonModifiers & UInt32(controlKey)) != 0
+            let winShift = (win.carbonModifiers & UInt32(shiftKey)) != 0
+            
+            if code == win.carbonKeyCode &&
+               hasCmd == winCmd &&
+               hasOpt == winOpt &&
+               hasCtrl == winCtrl &&
+               hasShift == winShift {
+                DispatchQueue.main.async { [weak self] in
+                    self?.dispatch(id: 1)
+                }
+                return true
+            }
+        }
+        
+        // Check ghost toggle
+        if let ghost = currentGhostConfig {
+            let gCmd = (ghost.carbonModifiers & UInt32(cmdKey)) != 0
+            let gOpt = (ghost.carbonModifiers & UInt32(optionKey)) != 0
+            let gCtrl = (ghost.carbonModifiers & UInt32(controlKey)) != 0
+            let gShift = (ghost.carbonModifiers & UInt32(shiftKey)) != 0
+            
+            if code == ghost.carbonKeyCode &&
+               hasCmd == gCmd &&
+               hasOpt == gOpt &&
+               hasCtrl == gCtrl &&
+               hasShift == gShift {
+                DispatchQueue.main.async { [weak self] in
+                    self?.dispatch(id: 2)
+                }
+                return true
+            }
+        }
+        
+        return false
     }
     
     func dispatch(id: UInt32) {
@@ -122,7 +196,10 @@ final class HotkeyManager {
     }
     
     func updateHotkeys(from prefs: AppPreferences) {
-        // Unregister existing
+        currentWindowConfig = prefs.toggleWindowHotkey
+        currentGhostConfig = prefs.toggleGhostHotkey
+        
+        // Unregister existing Carbon hotkeys
         if let ref = toggleWindowRef {
             UnregisterEventHotKey(ref)
             toggleWindowRef = nil
@@ -132,27 +209,35 @@ final class HotkeyManager {
             toggleGhostRef = nil
         }
         
+        let target = GetApplicationEventTarget()
+        
         // Register Toggle Window Hotkey
         let id1 = EventHotKeyID(signature: OSType(0x464E5431), id: 1)
-        RegisterEventHotKey(
+        let err1 = RegisterEventHotKey(
             prefs.toggleWindowHotkey.carbonKeyCode,
             prefs.toggleWindowHotkey.carbonModifiers,
             id1,
-            GetEventDispatcherTarget(),
+            target,
             0,
             &toggleWindowRef
         )
+        if err1 != noErr {
+            NSLog("[FloatNote] Warning: RegisterEventHotKey for window toggle returned status \(err1)")
+        }
         
         // Register Toggle Ghost Hotkey
         let id2 = EventHotKeyID(signature: OSType(0x464E5432), id: 2)
-        RegisterEventHotKey(
+        let err2 = RegisterEventHotKey(
             prefs.toggleGhostHotkey.carbonKeyCode,
             prefs.toggleGhostHotkey.carbonModifiers,
             id2,
-            GetEventDispatcherTarget(),
+            target,
             0,
             &toggleGhostRef
         )
+        if err2 != noErr {
+            NSLog("[FloatNote] Warning: RegisterEventHotKey for ghost toggle returned status \(err2)")
+        }
     }
     
     static func formatHotkeyString(keyCode: UInt32, modifiers: UInt32) -> String {

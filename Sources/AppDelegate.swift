@@ -185,6 +185,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             floatingPanel.orderOut(nil)
         } else {
             floatingPanel.orderFrontRegardless()
+            floatingPanel.makeKey()
         }
         updateMenu()
     }
@@ -205,7 +206,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     
     @objc func openSettings() {
         if settingsWindow == nil {
-            let hostingController = NSHostingController(rootView: SettingsView())
             let panel = NSPanel(
                 contentRect: NSRect(x: 0, y: 0, width: 440, height: 530),
                 styleMask: [.titled, .closable, .nonactivatingPanel],
@@ -213,7 +213,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 defer: false
             )
             panel.title = "Настройки FloatNote"
-            panel.contentViewController = hostingController
             panel.isFloatingPanel = true
             panel.hidesOnDeactivate = false
             panel.level = NSWindow.Level(rawValue: 1003)
@@ -222,6 +221,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             settingsWindow = panel
         }
         
+        // Re-create hosting controller so SettingsView picks up latest state every time it is opened
+        settingsWindow?.contentViewController = NSHostingController(rootView: SettingsView())
         settingsWindow?.level = NSWindow.Level(rawValue: 1003)
         settingsWindow?.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         settingsWindow?.center()

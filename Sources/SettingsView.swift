@@ -278,6 +278,11 @@ struct SettingsView: View {
         
         // Register updated hotkeys
         HotkeyManager.shared.updateHotkeys(from: storage.preferences)
+        
+        // Update Menu Bar items with new hotkey display strings
+        DispatchQueue.main.async {
+            (NSApp.delegate as? AppDelegate)?.updateMenu()
+        }
     }
     
     private func resetToDefaults() {
@@ -287,6 +292,9 @@ struct SettingsView: View {
         storage.preferences.fontSize = 14.0
         loadCurrentSettings()
         HotkeyManager.shared.updateHotkeys(from: storage.preferences)
+        DispatchQueue.main.async {
+            (NSApp.delegate as? AppDelegate)?.updateMenu()
+        }
     }
     
     private func nleDescription(for nle: TargetNLE) -> String {
