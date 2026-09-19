@@ -91,6 +91,10 @@ swiftc -O -sdk "$SDK_PATH" \
 
 chmod +x "$APP_BUNDLE/Contents/MacOS/FloatNote"
 
+# Code sign with ad-hoc signature to avoid malformed bundle errors
+echo "Подписание app-бандла (ad-hoc)..."
+codesign --force --deep --sign - "$APP_BUNDLE"
+
 if [ "$1" = "--install" ]; then
     echo "Установка в /Applications/$APP_NAME.app..."
     rm -rf "/Applications/$APP_NAME.app"

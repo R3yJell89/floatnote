@@ -145,21 +145,33 @@ FloatNote поддерживает переключение основного �
 
 ---
 
-### 🛠 Сборка и установка
+### 🛠 Установка и запуск
 
+#### Способ 1: Готовый DMG из Releases
+1. Скачайте `FloatNote-1.2.1.dmg` со страницы [Releases](https://github.com/R3yJell89/floatnote/releases).
+2. Откройте DMG и перетащите `FloatNote` в папку `Applications`.
+3. ⚠️ **Если macOS пишет «Приложение повреждено» или блокирует запуск (Gatekeeper):**
+   Так как приложение собрано независимым разработчиком без платного Apple Developer сертификата, macOS помечает скачанный из браузера файл атрибутом карантина. Чтобы снять его:
+   - **Вариант А:** Нажмите на иконку `FloatNote.app` **правой кнопкой мыши (или Control + клик)** → выберите **«Открыть»** → нажмите кнопку **«Открыть»** в диалоге подтверждения.
+   - **Вариант Б (в одну команду):** Откройте Терминал и выполните:
+     ```bash
+     xattr -cr /Applications/FloatNote.app
+     ```
+   - **Вариант В:** Откройте *Системные настройки → Конфиденциальность и безопасность* и внизу нажмите кнопку **«Подтвердить вход»** («Open Anyway»).
+
+#### Способ 2: Сборка из исходников (Zero-Gatekeeper)
 **Требования:**
 - macOS 13.0+ (Ventura, Sonoma, Sequoia, Tahoe)
 - Apple Silicon (M1/M2/M3/M4) или Intel Mac
 - Xcode Command Line Tools (`xcode-select --install`)
 
 ```bash
-git clone https://github.com/r3yjell/FloatNote.git
-cd FloatNote
+git clone https://github.com/R3yJell89/floatnote.git
+cd floatnote
 chmod +x build.sh
 ./build.sh --install
 ```
-
-Приложение соберется и установится в папку `/Applications/FloatNote.app`.
+Приложение скомпилируется прямо на вашей машине и автоматически установится в `/Applications/FloatNote.app` без каких-либо предупреждений Gatekeeper.
 
 ---
 
