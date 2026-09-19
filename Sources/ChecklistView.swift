@@ -78,6 +78,29 @@ struct ChecklistView: View {
                 }
                 .buttonStyle(.plain)
                 .help("Вставить текущий таймкод плейхеда DaVinci (или из буфера)")
+                
+                // DaVinci Markers Sync button
+                if storage.preferences.targetNLE == .davinci {
+                    Button(action: {
+                        NLEBridge.syncMarkersFromDaVinci { success, message in
+                            // Completed sync
+                        }
+                    }) {
+                        HStack(spacing: 2) {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                                .font(.system(size: 10))
+                            Text("Маркеры")
+                                .font(.system(size: 10, weight: .medium))
+                        }
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(Color.purple.opacity(0.18))
+                        .foregroundColor(.purple)
+                        .cornerRadius(4)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Импортировать все маркеры с текущего таймлайна DaVinci в чеклист")
+                }
             }
             .padding(.horizontal, 10)
             .padding(.top, 6)

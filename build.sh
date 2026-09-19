@@ -22,9 +22,13 @@ pkill -x FloatNote 2>/dev/null || true
 mkdir -p "$APP_BUNDLE/Contents/MacOS"
 mkdir -p "$APP_BUNDLE/Contents/Resources"
 
-# Copy AppIcon if exists
+# Copy AppIcon and DaVinci Bridge Script
 if [ -f "$DIR/Sources/AppIcon.icns" ]; then
     cp "$DIR/Sources/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
+fi
+
+if [ -f "$DIR/Plugins/DaVinciResolve/FloatNote_Bridge.py" ]; then
+    cp "$DIR/Plugins/DaVinciResolve/FloatNote_Bridge.py" "$APP_BUNDLE/Contents/Resources/FloatNote_Bridge.py"
 fi
 
 # Create Info.plist

@@ -15,6 +15,33 @@ struct NLEBridge {
         return nil
     }
     
+    /// Ensures the DaVinci Python bridge script is installed in DaVinci's Fusion Scripts Utility directory.
+    @discardableResult
+    static func ensureScriptInstalled() -> String {
+        let utilityDir = NSString(string: "~/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility").expandingTildeInPath
+        let destPath = (utilityDir as NSString).appendingPathComponent("FloatNote_Bridge.py")
+        
+        let fm = FileManager.default
+        if !fm.fileExists(atPath: destPath) {
+            try? fm.createDirectory(atPath: utilityDir, withIntermediateDirectories: true)
+            // Look for bundled script in Resources
+            if let bundleScript = Bundle.main.path(forResource: "FloatNote_Bridge", ofType: "py") {
+                try? fm.copyItem(atPath: bundleScript, toPath: destPath)
+            }
+        }
+        return destPath
+    }
+    
+    /// Resolve standard Python and DaVinci environment variables
+    private static var daVinciEnvironment: [String: String] {
+        var env = ProcessInfo.processInfo.environment
+        env["RESOLVE_SCRIPT_API"] = "/Library/Application Support/Blackmagic Design/DaVinci Resolve/Developer/Scripting"
+        env["RESOLVE_SCRIPT_LIB"] = "/Applications/DaVinci Resolve/DaVinci Resolve.app/Contents/Libraries/Fusion/fusionscript.so"
+        env["PYTHONPATH"] = "/Library/Application Support/Blackmagic Design/DaVinci Resolve/Developer/Scripting/Modules"
+        env["PATH"] = "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+        return env
+    }
+    
     /// Queries active playhead timecode from DaVinci Resolve or fallback clipboard
     static func fetchCurrentTimecode(completion: @escaping (String) -> Void) {
         let pb = NSPasteboard.general.string(forType: .string) ?? ""
@@ -24,7 +51,7 @@ struct NLEBridge {
             fallbackTC = String(pb[range])
         }
         
-        let scriptPath = NSString(string: "~/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility/FloatNote_Bridge.py").expandingTildeInPath
+        let scriptPath = ensureScriptInstalled()
         guard FileManager.default.fileExists(atPath: scriptPath) else {
             completion(fallbackTC)
             return
@@ -34,6 +61,7 @@ struct NLEBridge {
             let proc = Process()
             proc.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
             proc.arguments = [scriptPath, "get_tc"]
+            proc.environment = daVinciEnvironment
             let pipe = Pipe()
             proc.standardOutput = pipe
             proc.standardError = Pipe()
@@ -65,12 +93,14 @@ struct NLEBridge {
         DispatchQueue.global(qos: .userInitiated).async {
             switch targetNLE {
             case .davinci:
-                let scriptPath = NSString(string: "~/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility/FloatNote_Bridge.py").expandingTildeInPath
+                let scriptPath = ensureScriptInstalled()
                 if FileManager.default.fileExists(atPath: scriptPath) {
                     let proc = Process()
                     proc.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
                     proc.arguments = [scriptPath, "jump", tc]
+                    proc.environment = daVinciEnvironment
                     try? proc.run()
+                    proc.waitUntilExit()
                 }
             case .finalcut:
                 let scriptSource = """
@@ -111,7 +141,7 @@ struct NLEBridge {
     
     /// Adds a marker to the active timeline in DaVinci Resolve at the given timecode
     static func addMarkerToNLE(timecode: String, name: String, note: String = "FloatNote", color: String = "Blue", completion: ((Bool) -> Void)? = nil) {
-        let scriptPath = NSString(string: "~/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility/FloatNote_Bridge.py").expandingTildeInPath
+        let scriptPath = ensureScriptInstalled()
         guard FileManager.default.fileExists(atPath: scriptPath) else {
             completion?(false)
             return
@@ -121,6 +151,7 @@ struct NLEBridge {
             let proc = Process()
             proc.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
             proc.arguments = [scriptPath, "marker", timecode, color, name, note]
+            proc.environment = daVinciEnvironment
             let pipe = Pipe()
             proc.standardOutput = pipe
             proc.standardError = Pipe()
@@ -141,4 +172,41 @@ struct NLEBridge {
             }
         }
     }
+    
+    /// Syncs all markers from active DaVinci Resolve timeline into FloatNote checklist
+    static func syncMarkersFromDaVinci(completion: ((Bool, String) -> Void)? = nil) {
+        let scriptPath = ensureScriptInstalled()
+        guard FileManager.default.fileExists(atPath: scriptPath) else {
+            completion?(false, "Скрипт моста DaVinci не найден")
+            return
+        }
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            let proc = Process()
+            proc.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
+            proc.arguments = [scriptPath, "sync_markers"]
+            proc.environment = daVinciEnvironment
+            let pipe = Pipe()
+            proc.standardOutput = pipe
+            proc.standardError = Pipe()
+            
+            do {
+                try proc.run()
+                proc.waitUntilExit()
+                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                let output = String(data: data, encoding: .utf8) ?? ""
+                
+                DispatchQueue.main.async {
+                    // Reload checklist from file
+                    StorageManager.shared.reloadChecklistFromFile()
+                    completion?(true, output.trimmingCharacters(in: .whitespacesAndNewlines))
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    completion?(false, error.localizedDescription)
+                }
+            }
+        }
+    }
 }
+
