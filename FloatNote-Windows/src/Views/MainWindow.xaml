@@ -37,6 +37,18 @@
                         <TextBlock Text="📌" FontSize="12" Foreground="{StaticResource AccentGreenBrush}"/>
                     </Button>
                     <TextBlock Text="FloatNote" FontFamily="{StaticResource SegoeUIVariable}" FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    <!-- Language Toggle -->
+                    <Border Margin="10,0,0,0" Background="#20FFFFFF" CornerRadius="6" Padding="0">
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="LangRuButton" Click="LangRu_Click" Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="6,2">
+                                <TextBlock x:Name="LangRuText" Text="RU" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource AccentGreenBrush}"/>
+                            </Button>
+                            <TextBlock Text="/" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                            <Button x:Name="LangEnButton" Click="LangEn_Click" Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="6,2">
+                                <TextBlock x:Name="LangEnText" Text="EN" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            </Button>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
 
                 <!-- Action Tools -->
@@ -53,10 +65,18 @@
 
             <!-- 2. Pill Tabs -->
             <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <RadioButton x:Name="TabChecklist" Content="Чеклист" Style="{StaticResource PillTabButtonStyle}" IsChecked="True" Checked="Tab_Checked"/>
-                <RadioButton x:Name="TabNotes" Content="Заметки" Style="{StaticResource PillTabButtonStyle}" Margin="6,0,0,0" Checked="Tab_Checked"/>
-                <RadioButton x:Name="TabAudio" Content="Аудио" Style="{StaticResource PillTabButtonStyle}" Margin="6,0,0,0" Checked="Tab_Checked"/>
-                <RadioButton x:Name="TabSketch" Content="Скетч" Style="{StaticResource PillTabButtonStyle}" Margin="6,0,0,0" Checked="Tab_Checked"/>
+                <RadioButton x:Name="TabChecklist" Style="{StaticResource PillTabButtonStyle}" IsChecked="True" Checked="Tab_Checked">
+                    <TextBlock x:Name="TabChecklistText" Text="Чеклист"/>
+                </RadioButton>
+                <RadioButton x:Name="TabNotes" Style="{StaticResource PillTabButtonStyle}" Margin="6,0,0,0" Checked="Tab_Checked">
+                    <TextBlock x:Name="TabNotesText" Text="Заметки"/>
+                </RadioButton>
+                <RadioButton x:Name="TabAudio" Style="{StaticResource PillTabButtonStyle}" Margin="6,0,0,0" Checked="Tab_Checked">
+                    <TextBlock x:Name="TabAudioText" Text="Аудио"/>
+                </RadioButton>
+                <RadioButton x:Name="TabSketch" Style="{StaticResource PillTabButtonStyle}" Margin="6,0,0,0" Checked="Tab_Checked">
+                    <TextBlock x:Name="TabSketchText" Text="Скетч"/>
+                </RadioButton>
             </StackPanel>
 
             <!-- 3. Tab Contents -->

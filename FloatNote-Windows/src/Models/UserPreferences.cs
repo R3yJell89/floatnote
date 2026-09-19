@@ -2,6 +2,12 @@ using System.Text.Json.Serialization;
 
 namespace FloatNote.Models;
 
+public enum AppLanguage
+{
+    RU,
+    EN
+}
+
 public class UserPreferences
 {
     [JsonPropertyName("isPinned")]
@@ -30,4 +36,11 @@ public class UserPreferences
 
     [JsonPropertyName("windowHeight")]
     public double WindowHeight { get; set; } = 480;
+
+    [JsonPropertyName("appLanguage")]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public AppLanguage AppLanguage { get; set; } = AppLanguage.RU;
+
+    [JsonPropertyName("dictationLanguage")]
+    public string DictationLanguage { get; set; } = "ru-RU";
 }

@@ -26,13 +26,60 @@ public partial class MainWindow : Window
     {
         Win32Helper.ApplyPowerToysTheme(this, useAcrylic: true);
 
-        Width = _storage.Preferences.WindowWidth > 0 ? _storage.Preferences.WindowWidth : 380;
+        Width  = _storage.Preferences.WindowWidth  > 0 ? _storage.Preferences.WindowWidth  : 380;
         Height = _storage.Preferences.WindowHeight > 0 ? _storage.Preferences.WindowHeight : 480;
         Topmost = _storage.Preferences.IsPinned;
 
         ChecklistItemsControl.ItemsSource = _storage.Checklist;
         NotesTextBox.Text = _storage.NotesText;
+
+        RefreshUI();
     }
+
+    // ─── Language ────────────────────────────────────────────────────────────
+
+    private void LangRu_Click(object sender, RoutedEventArgs e)
+    {
+        _storage.Preferences.AppLanguage = AppLanguage.RU;
+        _storage.SavePreferences();
+        RefreshUI();
+    }
+
+    private void LangEn_Click(object sender, RoutedEventArgs e)
+    {
+        _storage.Preferences.AppLanguage = AppLanguage.EN;
+        _storage.SavePreferences();
+        RefreshUI();
+    }
+
+    /// <summary>Updates all localizable strings in MainWindow without restart.</summary>
+    private void RefreshUI()
+    {
+        bool isEN = _storage.Preferences.AppLanguage == AppLanguage.EN;
+
+        // Tab labels
+        TabChecklistText.Text = L10n.Tab_Checklist;
+        TabNotesText.Text     = L10n.Tab_Notes;
+        TabAudioText.Text     = L10n.Tab_Audio;
+        TabSketchText.Text    = L10n.Tab_Sketch;
+
+        // Placeholder
+        PlaceholderText.Text = L10n.Placeholder_NewTask;
+
+        // Language badge highlight
+        LangRuText.Foreground = isEN
+            ? (System.Windows.Media.Brush)FindResource("TextSecondaryBrush")
+            : (System.Windows.Media.Brush)FindResource("AccentGreenBrush");
+        LangEnText.Foreground = isEN
+            ? (System.Windows.Media.Brush)FindResource("AccentGreenBrush")
+            : (System.Windows.Media.Brush)FindResource("TextSecondaryBrush");
+
+        // Tooltips
+        PinButton.ToolTip        = L10n.Tip_Pin;
+        PlaceholderText.Text     = L10n.Placeholder_NewTask;
+    }
+
+    // ─── Window Chrome ────────────────────────────────────────────────────────
 
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
@@ -47,10 +94,7 @@ public partial class MainWindow : Window
         _storage.SavePreferences();
     }
 
-    private void Minimize_Click(object sender, RoutedEventArgs e)
-    {
-        WindowState = WindowState.Minimized;
-    }
+    private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
 
     private void Close_Click(object sender, RoutedEventArgs e)
     {
@@ -59,10 +103,13 @@ public partial class MainWindow : Window
         Application.Current.Shutdown();
     }
 
+    // ─── Companion windows ────────────────────────────────────────────────────
+
     private void OpenSettings_Click(object sender, RoutedEventArgs e)
     {
         var settingsWin = new SettingsWindow();
         settingsWin.Owner = this;
+        settingsWin.Closed += (_, _) => RefreshUI(); // refresh language after settings saved
         settingsWin.ShowDialog();
     }
 
@@ -90,22 +137,26 @@ public partial class MainWindow : Window
         if (_referenceWindow.IsVisible) _referenceWindow.Hide(); else _referenceWindow.Show();
     }
 
+    // ─── Tabs ─────────────────────────────────────────────────────────────────
+
     private void Tab_Checked(object sender, RoutedEventArgs e)
     {
         if (sender is RadioButton rb)
         {
             bool isChecklist = rb == TabChecklist;
-            bool isNotes = rb == TabNotes;
-            bool isAudio = rb == TabAudio;
-            bool isSketch = rb == TabSketch;
+            bool isNotes     = rb == TabNotes;
+            bool isAudio     = rb == TabAudio;
+            bool isSketch    = rb == TabSketch;
 
             if (ChecklistScrollViewer != null) ChecklistScrollViewer.Visibility = isChecklist ? Visibility.Visible : Visibility.Collapsed;
-            if (BottomInputBar != null) BottomInputBar.Visibility = isChecklist ? Visibility.Visible : Visibility.Collapsed;
-            if (NotesTextBox != null) NotesTextBox.Visibility = isNotes ? Visibility.Visible : Visibility.Collapsed;
-            if (AudioControl != null) AudioControl.Visibility = isAudio ? Visibility.Visible : Visibility.Collapsed;
-            if (SketchControl != null) SketchControl.Visibility = isSketch ? Visibility.Visible : Visibility.Collapsed;
+            if (BottomInputBar      != null) BottomInputBar.Visibility      = isChecklist ? Visibility.Visible : Visibility.Collapsed;
+            if (NotesTextBox        != null) NotesTextBox.Visibility        = isNotes     ? Visibility.Visible : Visibility.Collapsed;
+            if (AudioControl        != null) AudioControl.Visibility        = isAudio     ? Visibility.Visible : Visibility.Collapsed;
+            if (SketchControl       != null) SketchControl.Visibility       = isSketch    ? Visibility.Visible : Visibility.Collapsed;
         }
     }
+
+    // ─── Checklist ────────────────────────────────────────────────────────────
 
     private void AddTask()
     {
@@ -115,11 +166,7 @@ public partial class MainWindow : Window
             if (string.IsNullOrEmpty(text)) return;
 
             var (cleanTitle, timecode) = ChecklistItem.ParseInput(text);
-            var item = new ChecklistItem
-            {
-                Title = cleanTitle,
-                Timecode = timecode
-            };
+            var item = new ChecklistItem { Title = cleanTitle, Timecode = timecode };
 
             _storage.Checklist.Add(item);
             _storage.SaveChecklist();
@@ -128,10 +175,7 @@ public partial class MainWindow : Window
 
             if (!string.IsNullOrEmpty(timecode) && _storage.Preferences.AutoCreateMarkers)
             {
-                try
-                {
-                    NLEBridgeWindows.AddMarkerToNLE(timecode, cleanTitle, _storage.Preferences.TargetNLE);
-                }
+                try { NLEBridgeWindows.AddMarkerToNLE(timecode, cleanTitle, _storage.Preferences.TargetNLE); }
                 catch { }
             }
         }
@@ -144,9 +188,7 @@ public partial class MainWindow : Window
     private void NewTaskInput_TextChanged(object sender, TextChangedEventArgs e)
     {
         if (PlaceholderText != null)
-        {
             PlaceholderText.Visibility = string.IsNullOrEmpty(NewTaskInput.Text) ? Visibility.Visible : Visibility.Collapsed;
-        }
     }
 
     private void NewTaskInput_KeyDown(object sender, KeyEventArgs e)
@@ -154,25 +196,18 @@ public partial class MainWindow : Window
         if (e.Key == Key.Enter) AddTask();
     }
 
-    private void AddTaskButton_Click(object sender, RoutedEventArgs e)
-    {
-        AddTask();
-    }
+    private void AddTaskButton_Click(object sender, RoutedEventArgs e) => AddTask();
 
     private void Timecode_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button btn && btn.Content is string tc && !string.IsNullOrEmpty(tc))
-        {
             NLEBridgeWindows.JumpToTimecode(tc, _storage.Preferences.TargetNLE);
-        }
     }
 
     private void AddMarker_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button btn && btn.DataContext is ChecklistItem item && !string.IsNullOrEmpty(item.Timecode))
-        {
             NLEBridgeWindows.AddMarkerToNLE(item.Timecode, item.Title, _storage.Preferences.TargetNLE);
-        }
     }
 
     private void DeleteTask_Click(object sender, RoutedEventArgs e)
@@ -184,13 +219,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void TaskCheck_Click(object sender, RoutedEventArgs e)
-    {
-        _storage.SaveChecklist();
-    }
+    private void TaskCheck_Click(object sender, RoutedEventArgs e) => _storage.SaveChecklist();
 
-    private void NotesTextBox_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        _storage.SaveNotes(NotesTextBox.Text);
-    }
+    private void NotesTextBox_TextChanged(object sender, TextChangedEventArgs e) => _storage.SaveNotes(NotesTextBox.Text);
 }

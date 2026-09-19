@@ -7,19 +7,26 @@ namespace FloatNote.Services;
 
 public static class SpeechRecognitionService
 {
-    // Transcribes audio on Windows using Windows.Media.SpeechRecognition via lightweight PowerShell Windows Runtime interop
-    public static async Task<string> TranscribeWavAsync(string wavFilePath)
+    /// <summary>
+    /// Transcribes a WAV file using Windows Speech Recognition (System.Speech).
+    /// </summary>
+    /// <param name="wavFilePath">Path to the WAV file.</param>
+    /// <param name="locale">BCP-47 locale, e.g. "ru-RU" or "en-US". Defaults to "ru-RU".</param>
+    public static async Task<string> TranscribeWavAsync(string wavFilePath, string locale = "ru-RU")
     {
         return await Task.Run(() =>
         {
             try
             {
+                // Use System.Speech PowerShell interop — lightweight, no extra DLLs required
+                string safePath = wavFilePath.Replace("'", "''");
                 string script = $@"
 Add-Type -AssemblyName System.Speech
-$recognizer = New-Object System.Speech.Recognition.SpeechRecognitionEngine
+$culture = [System.Globalization.CultureInfo]::GetCultureInfo('{locale}')
+$recognizer = New-Object System.Speech.Recognition.SpeechRecognitionEngine $culture
 $grammar = New-Object System.Speech.Recognition.DictationGrammar
 $recognizer.LoadGrammar($grammar)
-$recognizer.SetInputToWaveFile('{wavFilePath.Replace("'", "''")}')
+$recognizer.SetInputToWaveFile('{safePath}')
 $result = $recognizer.Recognize([TimeSpan]::FromSeconds(30))
 if ($result) {{
     Write-Output $result.Text
@@ -41,7 +48,8 @@ if ($result) {{
                 {
                     string output = process.StandardOutput.ReadToEnd().Trim();
                     process.WaitForExit();
-                    return string.IsNullOrEmpty(output) ? "(Голосовая заметка без распознанного текста)" : output;
+
+                    if (!string.IsNullOrEmpty(output)) return output;
                 }
             }
             catch (Exception ex)
@@ -49,7 +57,8 @@ if ($result) {{
                 Debug.WriteLine($"Speech recognition error: {ex.Message}");
             }
 
-            return "(Аудиозапись сохранена)";
+            // Fallback label depends on locale
+            return locale.StartsWith("en") ? "(Voice note — no text recognized)" : "(Голосовая заметка без распознанного текста)";
         });
     }
 }

@@ -8,7 +8,7 @@
     <UseWPF>true</UseWPF>
     <AssemblyName>FloatNote</AssemblyName>
     <RootNamespace>FloatNote</RootNamespace>
-    <Version>1.2.0</Version>
+    <Version>1.3.0</Version>
     <Company>R3yJell</Company>
     <Product>FloatNote for Windows</Product>
     <Description>The Pro Video Editor Floating Companion Suite</Description>
