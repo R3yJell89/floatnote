@@ -24,12 +24,83 @@ struct NLEBridge {
         let fm = FileManager.default
         if !fm.fileExists(atPath: destPath) {
             try? fm.createDirectory(atPath: utilityDir, withIntermediateDirectories: true)
-            // Look for bundled script in Resources
+            // Look for bundled script in Resources or fallback to Plugins folder
             if let bundleScript = Bundle.main.path(forResource: "FloatNote_Bridge", ofType: "py") {
                 try? fm.copyItem(atPath: bundleScript, toPath: destPath)
             }
         }
         return destPath
+    }
+    
+    /// Installs integration plugins for DaVinci Resolve and Adobe Premiere Pro automatically
+    static func installNLEPlugins() -> (davinci: Bool, premiere: Bool, message: String) {
+        let fm = FileManager.default
+        var davinciInstalled = false
+        var premiereInstalled = false
+        var details: [String] = []
+        
+        // 1. DaVinci Resolve
+        let utilityDir = NSString(string: "~/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility").expandingTildeInPath
+        let destDaVinci = (utilityDir as NSString).appendingPathComponent("FloatNote_Bridge.py")
+        
+        var sourceDaVinci: String? = Bundle.main.path(forResource: "FloatNote_Bridge", ofType: "py")
+        if sourceDaVinci == nil {
+            // Fallback for development run
+            let devPath = NSString(string: "~/Documents/Давинчи/FloatNote-GitHub/Plugins/DaVinciResolve/FloatNote_Bridge.py").expandingTildeInPath
+            if fm.fileExists(atPath: devPath) { sourceDaVinci = devPath }
+        }
+        
+        if let src = sourceDaVinci, fm.fileExists(atPath: src) {
+            try? fm.createDirectory(atPath: utilityDir, withIntermediateDirectories: true)
+            try? fm.removeItem(atPath: destDaVinci)
+            do {
+                try fm.copyItem(atPath: src, toPath: destDaVinci)
+                try? fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: destDaVinci)
+                davinciInstalled = true
+                details.append("✅ DaVinci Resolve: установлен в меню Workspace → Scripts → Utility → FloatNote_Bridge")
+            } catch {
+                details.append("⚠️ DaVinci Resolve: не удалось скопировать (\(error.localizedDescription))")
+            }
+        } else {
+            details.append("⚠️ DaVinci Resolve: исходный файл плагина не найден")
+        }
+        
+        // 2. Adobe Premiere Pro
+        let premiereDir = NSString(string: "~/Documents/Adobe/Premiere Pro/Scripts").expandingTildeInPath
+        let destPremiere = (premiereDir as NSString).appendingPathComponent("FloatNote_Premiere.jsx")
+        
+        var sourcePremiere: String? = Bundle.main.path(forResource: "FloatNote_Premiere", ofType: "jsx")
+        if sourcePremiere == nil {
+            let devPath = NSString(string: "~/Documents/Давинчи/FloatNote-GitHub/Plugins/PremierePro/FloatNote_Premiere.jsx").expandingTildeInPath
+            if fm.fileExists(atPath: devPath) { sourcePremiere = devPath }
+        }
+        
+        if let src = sourcePremiere, fm.fileExists(atPath: src) {
+            try? fm.createDirectory(atPath: premiereDir, withIntermediateDirectories: true)
+            try? fm.removeItem(atPath: destPremiere)
+            do {
+                try fm.copyItem(atPath: src, toPath: destPremiere)
+                premiereInstalled = true
+                details.append("✅ Premiere Pro: установлен в Documents/Adobe/Premiere Pro/Scripts/")
+            } catch {
+                details.append("⚠️ Premiere Pro: не удалось скопировать (\(error.localizedDescription))")
+            }
+        }
+        
+        // 3. Final Cut Pro note
+        details.append("🍏 Final Cut Pro: работает напрямую через шорткаты плейхеда и экспорт в FCPXML 1.10 (плагин не требуется).")
+        
+        return (davinciInstalled, premiereInstalled, details.joined(separator: "\n\n"))
+    }
+    
+    /// Opens the installed scripts directory in Finder
+    static func openInstalledScriptsFolder() {
+        let utilityDir = NSString(string: "~/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Utility").expandingTildeInPath
+        let fm = FileManager.default
+        if !fm.fileExists(atPath: utilityDir) {
+            try? fm.createDirectory(atPath: utilityDir, withIntermediateDirectories: true)
+        }
+        NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: utilityDir)
     }
     
     /// Resolve standard Python and DaVinci environment variables

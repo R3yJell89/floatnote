@@ -146,7 +146,7 @@ struct ChecklistView: View {
                         .foregroundColor(.accentColor)
                         .font(.system(size: 15))
                     
-                    TextField("Новая задача... (Enter)", text: $newTaskText)
+                    TextField(L10n.newTaskPlaceholder, text: $newTaskText)
                         .textFieldStyle(.plain)
                         .font(.system(size: storage.preferences.fontSize))
                         .foregroundColor(.white)
@@ -175,11 +175,11 @@ struct ChecklistView: View {
                         .frame(width: 22, height: 22)
                     }
                     .buttonStyle(.plain)
-                    .help(speech.isListening ? "Остановить запись голоса" : "Голосовой ввод задачи (Apple Speech)")
+                    .help(speech.isListening ? (L10n.isRu ? "Остановить запись голоса" : "Stop voice recording") : (L10n.isRu ? "Голосовой ввод задачи (\(storage.preferences.dictationLanguage == "ru-RU" ? "RU" : "EN"))" : "Voice input (\(storage.preferences.dictationLanguage == "ru-RU" ? "RU" : "EN"))"))
                     
                     if !newTaskText.isEmpty {
                         Button(action: addNewTask) {
-                            Text("Добавить")
+                            Text(L10n.addBtn)
                                 .font(.system(size: 11, weight: .semibold))
                         }
                         .buttonStyle(.borderedProminent)
@@ -193,14 +193,14 @@ struct ChecklistView: View {
                 
                 HStack {
                     let completedCount = storage.items.filter { $0.isCompleted }.count
-                    Text("\(completedCount) из \(storage.items.count) выполнено")
+                    Text(L10n.isRu ? "\(completedCount) из \(storage.items.count) выполнено" : "\(completedCount) of \(storage.items.count) completed")
                         .font(.system(size: 10))
                         .foregroundColor(.white.opacity(0.5))
                     
                     Spacer()
                     
                     if completedCount > 0 {
-                        Button("Очистить выполненные") {
+                        Button(L10n.isRu ? "Очистить выполненные" : "Clear completed") {
                             storage.items.removeAll { $0.isCompleted }
                         }
                         .buttonStyle(.plain)

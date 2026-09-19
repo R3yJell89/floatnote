@@ -106,6 +106,30 @@ struct ContentView: View {
                 
                 // Action Buttons with FULL-BODY RECTANGULAR HIT TARGETS (compact 26x26)
                 HStack(spacing: 3) {
+                    // Language Toggle Button (RU / EN)
+                    Button(action: {
+                        if storage.preferences.appLanguage == .ru {
+                            storage.preferences.appLanguage = .en
+                        } else {
+                            storage.preferences.appLanguage = .ru
+                        }
+                    }) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color.white.opacity(0.09))
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(Color.white.opacity(0.14), lineWidth: 1)
+                            Text(storage.preferences.appLanguage.shortCode)
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(Color(red: 0.18, green: 0.78, blue: 0.35))
+                        }
+                        .frame(width: 26, height: 26)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .contentShape(Rectangle())
+                    .help(storage.preferences.appLanguage == .ru ? "Сменить язык интерфейса (RU -> EN)" : "Switch interface language (EN -> RU)")
+                    
                     // Open Files Folder
                     Button(action: {
                         NSWorkspace.shared.open(AppConstants.filesDirectory)
@@ -124,7 +148,7 @@ struct ContentView: View {
                     }
                     .buttonStyle(.plain)
                     .contentShape(Rectangle())
-                    .help("Открыть папку файлов FloatNote")
+                    .help(L10n.isRu ? "Открыть папку файлов FloatNote" : "Open FloatNote files folder")
                     
                     // Font Size Popover Button
                     Button(action: { showFontPopover.toggle() }) {
@@ -388,10 +412,10 @@ struct ContentView: View {
             
             // Tier 2: Adaptive Full-Width Tabs Bar
             HStack(spacing: 3) {
-                tabButton(title: "Чеклист", icon: "checkmark.square", index: 0)
-                tabButton(title: "Заметки", icon: "note.text", index: 1)
-                tabButton(title: "Аудио", icon: "mic.fill", index: 2)
-                tabButton(title: "Скетч", icon: "pencil.tip.crop.circle", index: 3)
+                tabButton(title: L10n.tabChecklist, icon: "checkmark.square", index: 0)
+                tabButton(title: L10n.tabNotes, icon: "note.text", index: 1)
+                tabButton(title: L10n.tabAudio, icon: "mic.fill", index: 2)
+                tabButton(title: L10n.tabSketch, icon: "pencil.tip.crop.circle", index: 3)
             }
             .padding(3)
             .background(Color.black.opacity(0.3))

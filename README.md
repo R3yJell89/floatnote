@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.2.1-brightgreen.svg" alt="Version 1.2.1">
+  <img src="https://img.shields.io/badge/version-1.3-brightgreen.svg" alt="Version 1.3">
   <img src="https://img.shields.io/badge/platform-macOS%2013.0+-blue.svg" alt="macOS 13.0+">
   <img src="https://img.shields.io/badge/Swift-6.0-orange.svg" alt="Swift 6">
   <img src="https://img.shields.io/badge/DaVinci%20Resolve-Companion%20Plugin-ff69b4.svg" alt="DaVinci Plugin">
@@ -69,9 +69,10 @@
   - *✂️ Черновой монтаж* (A-roll, отбор дублей, ритм).
   - Сохранение собственных шаблонов в JSON.
 
-#### 3. 📝 Заметки монтажера и сценарий
+#### 3. 📝 Заметки монтажера, сценарий и мультиязычность
 - Быстрые заметки, правки от режиссера или сценарий с автосохранением в реальном времени.
-- Встроенная диктовка голосом (`🎙`) на базе Apple Speech Framework (офлайн-распознавание русской и английской речи).
+- **Двуязычная диктовка голосом (`🎙`)**: мгновенное переключение между русским (`RU`) и английским (`EN`) языками распознавания речи в один клик.
+- **Переключатель языка интерфейса**: переключение языка приложения (RU / EN) прямо из шапки окна или в настройках.
 
 #### 4. ⏱ Отдельное окно: Таймер монтажной смены & Помодоро
 - Независимое плавающее окно:
@@ -83,6 +84,8 @@
 - Мгновенный возврат любого фрагмента в буфер для быстрой вставки в титры, генераторы текста или заметки.
 
 #### 6. 📐 Прозрачный оверлей безопасных зон: 9:16 + 16:9 + Шпаргалка платформ
+- **Плавное перетаскивание без рывков**: нативное перемещение через macOS AppKit с удобным курсором-ладонью.
+- **Сверхкомпактное масштабирование**: возможность сжать сетку до минимума (`240×426` для 9:16 и `360×202` для 16:9) под любое расположение окон.
 - **Режим 9:16**: разметка интерфейса Instagram Reels, TikTok, YouTube Shorts (шапка, колонка кнопок, нижнее описание).
 - **Режим 16:9**: стандарты телевещания Action Safe (93%), Title Safe (80/90%), сетка правила третей (Rule of Thirds) и центральный прицел.
 - **Шпаргалка платформ (Cheat Sheet)**: встроенная таблица с лимитами разрешений, FPS, битрейта и стандартов громкости (-14 LUFS для YouTube, -16 для Apple, -23 для ТВ).
@@ -148,7 +151,7 @@ FloatNote поддерживает переключение основного �
 ### 🛠 Установка и запуск
 
 #### Способ 1: Готовый DMG из Releases
-1. Скачайте `FloatNote-1.2.1.dmg` со страницы [Releases](https://github.com/R3yJell89/floatnote/releases).
+1. Скачайте `FloatNote-1.3.dmg` со страницы [Releases](https://github.com/R3yJell89/floatnote/releases).
 2. Откройте DMG и перетащите `FloatNote` в папку `Applications`.
 3. ⚠️ **Если macOS пишет «Приложение повреждено» или блокирует запуск (Gatekeeper):**
    Так как приложение собрано независимым разработчиком без платного Apple Developer сертификата, macOS помечает скачанный из браузера файл атрибутом карантина. Чтобы снять его:
@@ -181,15 +184,23 @@ chmod +x build.sh
 
 ### ✨ Features
 - **Fullscreen Floating HUD**: Layer `1002`, `.nonactivatingPanel`, First Mouse responsiveness.
+- **Bilingual Interface & Dictation**: Quick `RU` / `EN` toggle in header and speech dictation locale switcher (`ru-RU` / `en-US`) right next to the mic.
 - **Interactive Checklists & Timecodes**: Automatic `HH:MM:SS:FF` detection with click-to-copy timecode badges.
 - **Workflow Templates**: Built-in checklists for Color Grading, Pre-export checks, and Rough Cut review.
 - **Standalone Companion Windows**:
   - **Timer & Pomodoro**: Stopwatch and 25/5 focus timer.
   - **Clipboard History**: Up to 50 copied text snippets with 1-click restore.
-- **Transparent 9:16 Safe Areas Overlay**: Lockable click-through grid for TikTok, Reels & Shorts.
-- **Frame Grabber & Sketch**: Grab viewer frames and annotate them with arrows, shapes, and text notes.
-- **Voice Dictation**: Speech-to-text dictation via Apple Speech Framework.
+- **Transparent 9:16 & 16:9 Safe Areas Overlay**: Smooth native drag with hand cursor, ultra-low minimum scaling (`240×426` / `360×202`), and built-in platform cheat sheet.
+- **Frame Grabber & Sketch**: Grab viewer frames and annotate them with arrows, shapes, and persistent stroke saving without watermarks.
+- **Voice Dictation**: Speech-to-text dictation via Apple Speech Framework in Russian and English.
 - **DaVinci Resolve Plugin**: Dedicated companion bridge script in `Plugins/DaVinciResolve/` for timeline synchronization and marker placement.
+
+---
+
+### 👨‍💻 Разработчик / Developer
+
+* **Telegram**: [@RuinaJell](https://t.me/RuinaJell)
+* **GitHub**: [@R3yJell89](https://github.com/R3yJell89)
 
 ---
 

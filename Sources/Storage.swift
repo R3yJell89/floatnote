@@ -44,6 +44,27 @@ enum TargetNLE: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+enum AppLanguage: String, Codable, CaseIterable, Identifiable {
+    case ru = "ru"
+    case en = "en"
+    
+    var id: String { rawValue }
+    
+    var displayName: String {
+        switch self {
+        case .ru: return "Русский 🇷🇺"
+        case .en: return "English 🇺🇸"
+        }
+    }
+    
+    var shortCode: String {
+        switch self {
+        case .ru: return "RU"
+        case .en: return "EN"
+        }
+    }
+}
+
 struct AppPreferences: Codable {
     var opacity: Double = 0.92
     var fontSize: Double = 14.0
@@ -58,11 +79,14 @@ struct AppPreferences: Codable {
     var isPinned: Bool = true
     var targetNLE: TargetNLE = .davinci
     var autoCreateMarkers: Bool = true
+    var appLanguage: AppLanguage = .ru
+    var dictationLanguage: String = "ru-RU"
     
     enum CodingKeys: String, CodingKey {
         case opacity, fontSize, toggleWindowHotkey, toggleGhostHotkey
         case selectedTab, windowX, windowY, windowWidth, windowHeight
         case isClickThrough, isPinned, targetNLE, autoCreateMarkers
+        case appLanguage, dictationLanguage
     }
     
     init() {}
@@ -82,6 +106,8 @@ struct AppPreferences: Codable {
         isPinned = try container.decodeIfPresent(Bool.self, forKey: .isPinned) ?? true
         targetNLE = try container.decodeIfPresent(TargetNLE.self, forKey: .targetNLE) ?? .davinci
         autoCreateMarkers = try container.decodeIfPresent(Bool.self, forKey: .autoCreateMarkers) ?? true
+        appLanguage = try container.decodeIfPresent(AppLanguage.self, forKey: .appLanguage) ?? .ru
+        dictationLanguage = try container.decodeIfPresent(String.self, forKey: .dictationLanguage) ?? "ru-RU"
     }
 }
 

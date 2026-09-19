@@ -41,13 +41,17 @@ struct SettingsView: View {
     @State private var ghostCtrl: Bool = false
     @State private var ghostShift: Bool = false
     
+    // State for Plugin installation alert
+    @State private var showPluginAlert: Bool = false
+    @State private var pluginStatusMessage: String = ""
+    
     var body: some View {
         VStack(spacing: 16) {
             // Header
             HStack {
                 Image(systemName: "gearshape.fill")
                     .foregroundColor(Color(red: 0.18, green: 0.78, blue: 0.35))
-                Text("Настройки FloatNote")
+                Text(L10n.isRu ? "Настройки FloatNote" : "FloatNote Settings")
                     .font(.headline)
                 Spacer()
                 Button(action: { presentationMode.wrappedValue.dismiss() }) {
@@ -60,6 +64,45 @@ struct SettingsView: View {
             .padding(.bottom, 2)
             
             Divider()
+            
+            ScrollView(.vertical, showsIndicators: true) {
+                VStack(spacing: 14) {
+            
+            // Language Selection Section (UI & Speech Recognition)
+            VStack(alignment: .leading, spacing: 10) {
+                Text(L10n.isRu ? "Языковые настройки" : "Language Preferences")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                
+                HStack {
+                    Text(L10n.isRu ? "Язык интерфейса:" : "Interface Language:")
+                        .font(.caption)
+                    Spacer()
+                    Picker("", selection: $storage.preferences.appLanguage) {
+                        ForEach(AppLanguage.allCases) { lang in
+                            Text(lang.displayName).tag(lang)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 200)
+                }
+                
+                HStack {
+                    Text(L10n.isRu ? "Язык голосовой диктовки:" : "Speech Dictation Locale:")
+                        .font(.caption)
+                    Spacer()
+                    Picker("", selection: $storage.preferences.dictationLanguage) {
+                        Text("Русский 🇷🇺 (ru-RU)").tag("ru-RU")
+                        Text("English 🇺🇸 (en-US)").tag("en-US")
+                    }
+                    .pickerStyle(.menu)
+                    .frame(width: 200)
+                }
+            }
+            .padding(12)
+            .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
+            .cornerRadius(8)
             
             // Target NLE Section
             VStack(alignment: .leading, spacing: 8) {
@@ -84,10 +127,63 @@ struct SettingsView: View {
                         .toggleStyle(SwitchToggleStyle(tint: Color(red: 0.18, green: 0.78, blue: 0.35)))
                         .font(.caption)
                 }
+                
+                Divider()
+                    .padding(.vertical, 2)
+                
+                // One-click NLE Plugins Installer button
+                HStack(spacing: 8) {
+                    Button(action: {
+                        let res = NLEBridge.installNLEPlugins()
+                        pluginStatusMessage = res.message
+                        showPluginAlert = true
+                    }) {
+                        HStack(spacing: 5) {
+                            Image(systemName: "arrow.down.doc.fill")
+                                .font(.system(size: 11))
+                            Text("Установить плагины NLE")
+                                .font(.system(size: 11, weight: .semibold))
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Color(red: 0.18, green: 0.78, blue: 0.35).opacity(0.2))
+                        .foregroundColor(Color(red: 0.18, green: 0.78, blue: 0.35))
+                        .cornerRadius(6)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Установить скрипты интеграции для DaVinci Resolve и Premiere Pro в один клик")
+                    
+                    Button(action: {
+                        NLEBridge.openInstalledScriptsFolder()
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "folder")
+                                .font(.system(size: 11))
+                            Text("Папка скриптов")
+                                .font(.system(size: 11))
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .background(Color.white.opacity(0.08))
+                        .foregroundColor(.secondary)
+                        .cornerRadius(6)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Открыть папку скриптов DaVinci Resolve в Finder")
+                    
+                    Spacer()
+                }
             }
             .padding(12)
             .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
             .cornerRadius(8)
+            .alert(isPresented: $showPluginAlert) {
+                Alert(
+                    title: Text("Установка плагинов FloatNote"),
+                    message: Text(pluginStatusMessage),
+                    dismissButton: .default(Text("Понятно"))
+                )
+            }
             
             // Window Behavior / Pinning Section
             VStack(alignment: .leading, spacing: 8) {
@@ -189,12 +285,16 @@ struct SettingsView: View {
             .padding(12)
             .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
             .cornerRadius(8)
+                }
+                .padding(.trailing, 2)
+            }
             
-            Spacer()
+            Divider()
+                .padding(.vertical, 2)
             
             // Footer Buttons
             HStack {
-                Button("По умолчанию") {
+                Button(L10n.isRu ? "По умолчанию" : "Reset Defaults") {
                     resetToDefaults()
                 }
                 .buttonStyle(.bordered)
@@ -209,7 +309,7 @@ struct SettingsView: View {
                     ZStack {
                         RoundedRectangle(cornerRadius: 6)
                             .fill(Color(red: 0.18, green: 0.78, blue: 0.35))
-                        Text("Сохранить")
+                        Text(L10n.isRu ? "Сохранить" : "Save")
                             .font(.system(size: 13, weight: .bold))
                             .foregroundColor(.white)
                     }
@@ -222,7 +322,7 @@ struct SettingsView: View {
             }
         }
         .padding(18)
-        .frame(width: 410, height: 490)
+        .frame(minWidth: 420, idealWidth: 450, maxWidth: .infinity, minHeight: 450, idealHeight: 600, maxHeight: .infinity)
         .onAppear {
             loadCurrentSettings()
         }

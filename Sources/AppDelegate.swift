@@ -207,11 +207,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func openSettings() {
         if settingsWindow == nil {
             let panel = NSPanel(
-                contentRect: NSRect(x: 0, y: 0, width: 440, height: 530),
-                styleMask: [.titled, .closable, .nonactivatingPanel],
+                contentRect: NSRect(x: 0, y: 0, width: 450, height: 600),
+                styleMask: [.titled, .closable, .resizable, .nonactivatingPanel],
                 backing: .buffered,
                 defer: false
             )
+            panel.minSize = NSSize(width: 420, height: 450)
             panel.title = "Настройки FloatNote"
             panel.isFloatingPanel = true
             panel.hidesOnDeactivate = false

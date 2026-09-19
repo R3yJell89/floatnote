@@ -70,11 +70,13 @@ final class SafeAreasManager: ObservableObject {
         
         if mode == .vertical {
             panel.aspectRatio = NSSize(width: 9, height: 16)
-            targetHeight = baseDimension
-            targetWidth = baseDimension * (9.0 / 16.0)
+            panel.minSize = NSSize(width: 240, height: 240.0 * 16.0 / 9.0)
+            targetHeight = max(426, baseDimension)
+            targetWidth = targetHeight * (9.0 / 16.0)
         } else {
             panel.aspectRatio = NSSize(width: 16, height: 9)
-            targetWidth = min(screen.width * 0.65, baseDimension * (16.0 / 9.0))
+            panel.minSize = NSSize(width: 360, height: 360.0 * 9.0 / 16.0)
+            targetWidth = max(360, min(screen.width * 0.65, baseDimension * (16.0 / 9.0)))
             targetHeight = targetWidth * (9.0 / 16.0)
         }
         
@@ -91,12 +93,13 @@ final class SafeAreasManager: ObservableObject {
     private func setupPanel() {
         let screen = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
         let height: CGFloat = min(screen.height * 0.72, 680)
-        let width: CGFloat = height * (9.0 / 16.0)
+        let width: CGFloat = max(320, height * (9.0 / 16.0))
+        let finalHeight = width * (16.0 / 9.0)
         let x = screen.midX - (width / 2.0)
-        let y = screen.midY - (height / 2.0)
+        let y = screen.midY - (finalHeight / 2.0)
         
         let panel = NSPanel(
-            contentRect: NSRect(x: x, y: y, width: width, height: height),
+            contentRect: NSRect(x: x, y: y, width: width, height: finalHeight),
             styleMask: [.borderless, .nonactivatingPanel, .resizable],
             backing: .buffered,
             defer: false
@@ -109,10 +112,10 @@ final class SafeAreasManager: ObservableObject {
         panel.backgroundColor = .clear
         panel.hasShadow = false
         panel.aspectRatio = NSSize(width: 9, height: 16)
-        panel.minSize = NSSize(width: 200, height: 200)
+        panel.minSize = NSSize(width: 240, height: 240.0 * 16.0 / 9.0)
         panel.ignoresMouseEvents = false
         panel.isMovable = true
-        panel.isMovableByWindowBackground = true
+        panel.isMovableByWindowBackground = false
         
         let hostingView = FirstMouseHostingView(rootView: SafeAreasView())
         panel.contentView = hostingView
@@ -139,17 +142,18 @@ final class SafeAreasManager: ObservableObject {
             return event
         }
         
-        globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged]) { [weak self] _ in
+        globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved]) { [weak self] _ in
             self?.checkMousePosition(NSEvent.mouseLocation)
         }
         
-        localMouseMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged]) { [weak self] event in
+        localMouseMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved]) { [weak self] event in
             self?.checkMousePosition(NSEvent.mouseLocation)
             return event
         }
         
-        // 60fps check to guarantee responsiveness during active mouse actions
-        let timer = Timer(timeInterval: 0.02, repeats: true) { [weak self] _ in
+        // Periodic check to guarantee responsiveness (only when mouse isn't dragging window)
+        let timer = Timer(timeInterval: 0.1, repeats: true) { [weak self] _ in
+            guard NSEvent.pressedMouseButtons == 0 else { return }
             self?.checkMousePosition(NSEvent.mouseLocation)
         }
         RunLoop.main.add(timer, forMode: .common)
@@ -188,14 +192,15 @@ final class SafeAreasManager: ObservableObject {
             return
         }
         
-        // When locked: toolbar (top 50pt) remains fully interactive!
+        // When locked: toolbar (top 50pt) and resize handle (bottom-right 120x40pt) remain fully interactive!
         // The rest of the window (the guides) lets clicks pass straight through into DaVinci.
         let frame = panel.frame
         let toolbarHeight: CGFloat = 50.0
         let toolbarRect = NSRect(x: frame.minX, y: frame.maxY - toolbarHeight, width: frame.width, height: toolbarHeight)
+        let resizeGripRect = NSRect(x: frame.maxX - 110, y: frame.minY, width: 110, height: 40)
         
-        let isOverToolbar = toolbarRect.contains(mouseLoc)
-        if isOverToolbar {
+        let isOverInteractiveArea = toolbarRect.contains(mouseLoc) || resizeGripRect.contains(mouseLoc)
+        if isOverInteractiveArea {
             if panel.ignoresMouseEvents {
                 panel.ignoresMouseEvents = false
             }
@@ -275,9 +280,9 @@ struct SafeAreasView: View {
                         // Draggable Handle - clear & prominent grip bar
                         WindowDragArea()
                             .frame(height: 22)
-                            .frame(minWidth: 80)
+                            .frame(minWidth: 44, maxWidth: 90)
                             .overlay(
-                                HStack(spacing: 4) {
+                                HStack(spacing: 3) {
                                     Image(systemName: "hand.draw")
                                         .font(.system(size: 10, weight: .bold))
                                     Text("Тянуть")
@@ -337,6 +342,33 @@ struct SafeAreasView: View {
                     .padding(.top, 6)
                     
                     Spacer()
+                    
+                    // Bottom Controls (Resize Handle Grip)
+                    HStack {
+                        Spacer()
+                        
+                        WindowResizeArea()
+                            .frame(width: 88, height: 24)
+                            .overlay(
+                                HStack(spacing: 4) {
+                                    Image(systemName: "hand.draw")
+                                        .font(.system(size: 10, weight: .bold))
+                                    Text("Размер")
+                                        .font(.system(size: 10, weight: .semibold))
+                                }
+                                .foregroundColor(.white.opacity(0.85))
+                                .allowsHitTesting(false)
+                            )
+                            .background(Color.black.opacity(0.85))
+                            .cornerRadius(6)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .stroke(Color.white.opacity(0.25), lineWidth: 1)
+                            )
+                            .padding(.trailing, 8)
+                            .padding(.bottom, 8)
+                            .help("Зажмите ладонью и тяните, чтобы растянуть или стянуть оверлей")
+                    }
                 }
             }
         }

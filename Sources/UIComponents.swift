@@ -35,8 +35,6 @@ struct WindowDragArea: NSViewRepresentable {
 final class WindowDragNSView: NSView {
     override var mouseDownCanMoveWindow: Bool { true }
     
-    private var initialMouseLocation: NSPoint?
-    private var initialWindowOrigin: NSPoint?
     private var isDragging: Bool = false
     
     override func resetCursorRects() {
@@ -45,31 +43,87 @@ final class WindowDragNSView: NSView {
     }
     
     override func mouseDown(with event: NSEvent) {
-        initialMouseLocation = NSEvent.mouseLocation
-        initialWindowOrigin = window?.frame.origin
         isDragging = true
         window?.invalidateCursorRects(for: self)
         window?.performDrag(with: event)
     }
     
+    override func mouseUp(with event: NSEvent) {
+        isDragging = false
+        window?.invalidateCursorRects(for: self)
+        super.mouseUp(with: event)
+    }
+}
+
+// MARK: - Window Resize Area (Proportional diagonal resize)
+
+struct WindowResizeArea: NSViewRepresentable {
+    func makeNSView(context: Context) -> WindowResizeNSView {
+        WindowResizeNSView()
+    }
+    func updateNSView(_ nsView: WindowResizeNSView, context: Context) {}
+}
+
+final class WindowResizeNSView: NSView {
+    private var initialMouseLocation: NSPoint?
+    private var initialWindowFrame: NSRect?
+    private var isResizing: Bool = false
+    
+    override func resetCursorRects() {
+        super.resetCursorRects()
+        addCursorRect(bounds, cursor: isResizing ? .closedHand : .openHand)
+    }
+    
+    override func mouseDown(with event: NSEvent) {
+        initialMouseLocation = NSEvent.mouseLocation
+        initialWindowFrame = window?.frame
+        isResizing = true
+        window?.invalidateCursorRects(for: self)
+    }
+    
     override func mouseDragged(with event: NSEvent) {
         guard let startMouse = initialMouseLocation,
-              let startOrigin = initialWindowOrigin,
+              let startFrame = initialWindowFrame,
               let win = window else {
             super.mouseDragged(with: event)
             return
         }
+        
         let currentMouse = NSEvent.mouseLocation
         let deltaX = currentMouse.x - startMouse.x
-        let deltaY = currentMouse.y - startMouse.y
-        let newOrigin = NSPoint(x: startOrigin.x + deltaX, y: startOrigin.y + deltaY)
-        win.setFrameOrigin(newOrigin)
+        let deltaY = -(currentMouse.y - startMouse.y) // dragging down increases size in bottom corner
+        let delta = (deltaX + deltaY) / 2.0
+        
+        let isVertical = win.aspectRatio.width < win.aspectRatio.height
+        let ratio: CGFloat = isVertical ? (9.0 / 16.0) : (16.0 / 9.0)
+        let minW: CGFloat = isVertical ? 240.0 : 360.0
+        
+        var newWidth = max(minW, startFrame.width + delta)
+        var newHeight = newWidth / ratio
+        
+        if let screen = win.screen ?? NSScreen.main {
+            let maxW = screen.visibleFrame.width * 0.95
+            let maxH = screen.visibleFrame.height * 0.95
+            if newWidth > maxW {
+                newWidth = maxW
+                newHeight = newWidth / ratio
+            }
+            if newHeight > maxH {
+                newHeight = maxH
+                newWidth = newHeight * ratio
+            }
+        }
+        
+        // Pin the top-left origin so resizing from bottom-right expands downwards and to the right
+        let newOriginY = startFrame.maxY - newHeight
+        let newFrame = NSRect(x: startFrame.minX, y: newOriginY, width: newWidth, height: newHeight)
+        win.setFrame(newFrame, display: true)
     }
     
     override func mouseUp(with event: NSEvent) {
         initialMouseLocation = nil
-        initialWindowOrigin = nil
-        isDragging = false
+        initialWindowFrame = nil
+        isResizing = false
         window?.invalidateCursorRects(for: self)
         super.mouseUp(with: event)
     }
@@ -232,3 +286,45 @@ struct MacEditorView: NSViewRepresentable {
         }
     }
 }
+
+// MARK: - Lightweight Localization Helper
+
+enum L10n {
+    static var isRu: Bool {
+        StorageManager.shared.preferences.appLanguage == .ru
+    }
+    
+    // Tabs
+    static var tabChecklist: String { isRu ? "Чеклист" : "Checklist" }
+    static var tabNotes: String { isRu ? "Заметки" : "Notes" }
+    static var tabAudio: String { isRu ? "Аудио" : "Audio" }
+    static var tabSketch: String { isRu ? "Скетч" : "Sketch" }
+    
+    // Header & Companion tools
+    static var toolSafeAreas: String { isRu ? "Зоны" : "Safe Areas" }
+    static var toolReference: String { isRu ? "Референс" : "Reference" }
+    static var toolTimer: String { isRu ? "Таймер" : "Timer" }
+    static var toolClipboard: String { isRu ? "Буфер" : "Clipboard" }
+    
+    static var pinTooltip: String { isRu ? "Закрепить поверх всех окон" : "Pin on top of all windows" }
+    static var unpinTooltip: String { isRu ? "Открепить окно" : "Unpin window" }
+    static var fontSizeTooltip: String { isRu ? "Размер текста" : "Font size" }
+    static var opacityTooltip: String { isRu ? "Прозрачность окна" : "Window opacity" }
+    static var ghostModeTooltip: String { isRu ? "Сквозной клик (Ghost mode)" : "Click-through (Ghost mode)" }
+    static var settingsTooltip: String { isRu ? "Настройки" : "Settings" }
+    static var hideTooltip: String { isRu ? "Скрыть окно" : "Hide window" }
+    
+    // Notes & Checklist
+    static var timecodeBtn: String { isRu ? "Таймкод" : "Timecode" }
+    static var dictationBtn: String { isRu ? "Диктовка" : "Dictation" }
+    static var dictationListening: String { isRu ? "Слушаю..." : "Listening..." }
+    static var clipboardBtn: String { isRu ? "Буфер" : "Clipboard" }
+    static var charactersCount: String { isRu ? "символов" : "characters" }
+    static var autoSaved: String { isRu ? "Автосохранение" : "Auto-saved" }
+    
+    static var newTaskPlaceholder: String { isRu ? "Новая задача... (Enter)" : "New task... (Enter)" }
+    static var addBtn: String { isRu ? "Добавить" : "Add" }
+    static var templatesBtn: String { isRu ? "Шаблоны" : "Templates" }
+    static var markersBtn: String { isRu ? "Маркеры" : "Markers" }
+}
+

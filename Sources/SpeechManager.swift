@@ -8,7 +8,7 @@ final class SpeechDictationManager: ObservableObject {
     @Published var isListening: Bool = false
     @Published var liveTranscript: String = ""
     
-    private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "ru-RU")) ?? SFSpeechRecognizer()
+    private var speechRecognizer: SFSpeechRecognizer?
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
     private let audioEngine = AVAudioEngine()
@@ -17,15 +17,21 @@ final class SpeechDictationManager: ObservableObject {
     
     private init() {}
     
-    func toggleDictation(onResult: @escaping (String) -> Void) {
+    func currentLocaleIdentifier() -> String {
+        return StorageManager.shared.preferences.dictationLanguage
+    }
+    
+    func toggleDictation(localeId: String? = nil, onResult: @escaping (String) -> Void) {
         if isListening {
             stopDictation()
         } else {
-            startDictation(onResult: onResult)
+            startDictation(localeId: localeId, onResult: onResult)
         }
     }
     
-    func startDictation(onResult: @escaping (String) -> Void) {
+    func startDictation(localeId: String? = nil, onResult: @escaping (String) -> Void) {
+        let loc = localeId ?? currentLocaleIdentifier()
+        self.speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: loc)) ?? SFSpeechRecognizer(locale: Locale(identifier: "ru-RU"))
         self.onFinalResult = onResult
         self.liveTranscript = ""
         
