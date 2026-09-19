@@ -128,19 +128,24 @@ struct AudioNotesView: View {
                     
                     Spacer()
                     
-                    // Play test tone
+                    // Play / Stop test tone
+                    let isCurrentTonePlaying = audioManager.isPlaying && audioManager.playingToneFrequency == selectedFrequency
                     Button(action: {
-                        audioManager.playTone(frequency: selectedFrequency)
+                        audioManager.toggleTone(frequency: selectedFrequency)
                     }) {
-                        Image(systemName: "speaker.wave.2.fill")
-                            .font(.system(size: 10))
-                            .frame(width: 24, height: 20)
-                            .background(Color.yellow.opacity(0.2))
-                            .foregroundColor(.yellow)
+                        Image(systemName: isCurrentTonePlaying ? "stop.fill" : "speaker.wave.2.fill")
+                            .font(.system(size: 10, weight: .bold))
+                            .frame(width: 26, height: 20)
+                            .background(isCurrentTonePlaying ? Color.red.opacity(0.35) : Color.yellow.opacity(0.2))
+                            .foregroundColor(isCurrentTonePlaying ? .red : .yellow)
                             .cornerRadius(4)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .stroke(isCurrentTonePlaying ? Color.red.opacity(0.8) : Color.yellow.opacity(0.4), lineWidth: 1)
+                            )
                     }
                     .buttonStyle(.plain)
-                    .help("Прослушать тон \(Int(selectedFrequency)) Гц")
+                    .help(isCurrentTonePlaying ? "Остановить воспроизведение тона" : "Прослушать тон \(Int(selectedFrequency)) Гц (повторный клик выключает)")
                     
                     // Drag-and-drop WAV badge
                     if let url = audioManager.generateToneWav(frequency: selectedFrequency) {

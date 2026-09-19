@@ -19,6 +19,7 @@ final class AudioManager: NSObject, ObservableObject, AVAudioRecorderDelegate, A
     @Published var isRecording: Bool = false
     @Published var isPlaying: Bool = false
     @Published var currentlyPlayingURL: URL?
+    @Published var playingToneFrequency: Double? = nil
     @Published var recordingDuration: TimeInterval = 0
     @Published var audioNotes: [AudioNote] = []
     
@@ -231,6 +232,7 @@ final class AudioManager: NSObject, ObservableObject, AVAudioRecorderDelegate, A
         audioPlayer = nil
         isPlaying = false
         currentlyPlayingURL = nil
+        playingToneFrequency = nil
     }
     
     func delete(url: URL) {
@@ -334,8 +336,18 @@ final class AudioManager: NSObject, ObservableObject, AVAudioRecorderDelegate, A
     }
     
     func playTone(frequency: Double = 1000.0) {
+        toggleTone(frequency: frequency)
+    }
+    
+    func toggleTone(frequency: Double = 1000.0) {
+        if isPlaying && playingToneFrequency == frequency {
+            stopPlaying()
+            return
+        }
+        
         if let url = generateToneWav(frequency: frequency) {
             play(url: url)
+            playingToneFrequency = frequency
         }
     }
 }

@@ -12,6 +12,10 @@ final class ReferenceManager: ObservableObject {
     @Published var referenceImage: NSImage? = nil
     
     private var panel: NSPanel?
+    private var mousePollTimer: Timer?
+    private var globalMouseMonitor: Any?
+    private var localMouseMonitor: Any?
+    private var keyMonitor: Any?
     
     private init() {}
     
@@ -29,16 +33,18 @@ final class ReferenceManager: ObservableObject {
         }
         panel?.orderFrontRegardless()
         isVisible = true
+        startMonitoring()
     }
     
     func hide() {
         panel?.orderOut(nil)
         isVisible = false
+        stopMonitoring()
     }
     
     func toggleLock() {
         isLocked.toggle()
-        panel?.ignoresMouseEvents = isLocked
+        updateMouseInteractivity()
     }
     
     private func setupPanel() {
@@ -62,12 +68,95 @@ final class ReferenceManager: ObservableObject {
         p.backgroundColor = .clear
         p.hasShadow = false
         p.minSize = NSSize(width: 200, height: 150)
-        p.ignoresMouseEvents = isLocked
+        p.ignoresMouseEvents = false
         
         let hosting = FirstMouseHostingView(rootView: ReferenceOverlayView())
         p.contentView = hosting
         
         self.panel = p
+    }
+    
+    // MARK: - Safe Interactivity & Escape Monitoring
+    private func startMonitoring() {
+        stopMonitoring()
+        
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            if event.keyCode == 53 { // 53 = Escape
+                guard let self = self, self.isVisible else { return event }
+                if self.isLocked {
+                    self.toggleLock()
+                    return nil
+                } else {
+                    self.hide()
+                    return nil
+                }
+            }
+            return event
+        }
+        
+        globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged]) { [weak self] _ in
+            self?.checkMousePosition(NSEvent.mouseLocation)
+        }
+        
+        localMouseMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged]) { [weak self] event in
+            self?.checkMousePosition(NSEvent.mouseLocation)
+            return event
+        }
+        
+        let timer = Timer(timeInterval: 0.02, repeats: true) { [weak self] _ in
+            self?.checkMousePosition(NSEvent.mouseLocation)
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        mousePollTimer = timer
+    }
+    
+    private func stopMonitoring() {
+        mousePollTimer?.invalidate()
+        mousePollTimer = nil
+        if let km = keyMonitor {
+            NSEvent.removeMonitor(km)
+            keyMonitor = nil
+        }
+        if let gm = globalMouseMonitor {
+            NSEvent.removeMonitor(gm)
+            globalMouseMonitor = nil
+        }
+        if let lm = localMouseMonitor {
+            NSEvent.removeMonitor(lm)
+            localMouseMonitor = nil
+        }
+        panel?.ignoresMouseEvents = false
+    }
+    
+    private func updateMouseInteractivity() {
+        checkMousePosition(NSEvent.mouseLocation)
+    }
+    
+    private func checkMousePosition(_ mouseLoc: NSPoint) {
+        guard let panel = panel, isVisible else { return }
+        
+        if !isLocked {
+            if panel.ignoresMouseEvents {
+                panel.ignoresMouseEvents = false
+            }
+            return
+        }
+        
+        // Toolbar (top 45pt) remains always interactive
+        let frame = panel.frame
+        let toolbarHeight: CGFloat = 45.0
+        let toolbarRect = NSRect(x: frame.minX, y: frame.maxY - toolbarHeight, width: frame.width, height: toolbarHeight)
+        
+        let isOverToolbar = toolbarRect.contains(mouseLoc)
+        if isOverToolbar {
+            if panel.ignoresMouseEvents {
+                panel.ignoresMouseEvents = false
+            }
+        } else {
+            if !panel.ignoresMouseEvents {
+                panel.ignoresMouseEvents = true
+            }
+        }
     }
 }
 

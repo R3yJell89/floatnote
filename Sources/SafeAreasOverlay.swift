@@ -20,6 +20,10 @@ final class SafeAreasManager: ObservableObject {
     @Published var showCheatSheet: Bool = false
     
     private var overlayPanel: NSPanel?
+    private var mousePollTimer: Timer?
+    private var globalMouseMonitor: Any?
+    private var localMouseMonitor: Any?
+    private var keyMonitor: Any?
     
     private init() {}
     
@@ -37,16 +41,18 @@ final class SafeAreasManager: ObservableObject {
         }
         overlayPanel?.orderFrontRegardless()
         isVisible = true
+        startMonitoring()
     }
     
     func hide() {
         overlayPanel?.orderOut(nil)
         isVisible = false
+        stopMonitoring()
     }
     
     func toggleLock() {
         isLocked.toggle()
-        overlayPanel?.ignoresMouseEvents = isLocked
+        updateMouseInteractivity()
     }
     
     func switchMode(_ newMode: AspectRatioMode) {
@@ -104,12 +110,98 @@ final class SafeAreasManager: ObservableObject {
         panel.hasShadow = false
         panel.aspectRatio = NSSize(width: 9, height: 16)
         panel.minSize = NSSize(width: 200, height: 200)
-        panel.ignoresMouseEvents = isLocked
+        panel.ignoresMouseEvents = false
         
         let hostingView = FirstMouseHostingView(rootView: SafeAreasView())
         panel.contentView = hostingView
         
         self.overlayPanel = panel
+    }
+    
+    // MARK: - Safe Interactivity & Escape Monitoring
+    private func startMonitoring() {
+        stopMonitoring()
+        
+        // Escape key to unlock or dismiss
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            if event.keyCode == 53 { // 53 = Escape
+                guard let self = self, self.isVisible else { return event }
+                if self.isLocked {
+                    self.toggleLock()
+                    return nil
+                } else {
+                    self.hide()
+                    return nil
+                }
+            }
+            return event
+        }
+        
+        globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged]) { [weak self] _ in
+            self?.checkMousePosition(NSEvent.mouseLocation)
+        }
+        
+        localMouseMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged]) { [weak self] event in
+            self?.checkMousePosition(NSEvent.mouseLocation)
+            return event
+        }
+        
+        // 60fps check to guarantee responsiveness during active mouse actions
+        let timer = Timer(timeInterval: 0.02, repeats: true) { [weak self] _ in
+            self?.checkMousePosition(NSEvent.mouseLocation)
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        mousePollTimer = timer
+    }
+    
+    private func stopMonitoring() {
+        mousePollTimer?.invalidate()
+        mousePollTimer = nil
+        if let km = keyMonitor {
+            NSEvent.removeMonitor(km)
+            keyMonitor = nil
+        }
+        if let gm = globalMouseMonitor {
+            NSEvent.removeMonitor(gm)
+            globalMouseMonitor = nil
+        }
+        if let lm = localMouseMonitor {
+            NSEvent.removeMonitor(lm)
+            localMouseMonitor = nil
+        }
+        overlayPanel?.ignoresMouseEvents = false
+    }
+    
+    private func updateMouseInteractivity() {
+        checkMousePosition(NSEvent.mouseLocation)
+    }
+    
+    private func checkMousePosition(_ mouseLoc: NSPoint) {
+        guard let panel = overlayPanel, isVisible else { return }
+        
+        if !isLocked {
+            if panel.ignoresMouseEvents {
+                panel.ignoresMouseEvents = false
+            }
+            return
+        }
+        
+        // When locked: toolbar (top 50pt) remains fully interactive!
+        // The rest of the window (the guides) lets clicks pass straight through into DaVinci.
+        let frame = panel.frame
+        let toolbarHeight: CGFloat = 50.0
+        let toolbarRect = NSRect(x: frame.minX, y: frame.maxY - toolbarHeight, width: frame.width, height: toolbarHeight)
+        
+        let isOverToolbar = toolbarRect.contains(mouseLoc)
+        if isOverToolbar {
+            if panel.ignoresMouseEvents {
+                panel.ignoresMouseEvents = false
+            }
+        } else {
+            if !panel.ignoresMouseEvents {
+                panel.ignoresMouseEvents = true
+            }
+        }
     }
 }
 
@@ -178,8 +270,14 @@ struct SafeAreasView: View {
                         .buttonStyle(.plain)
                         .help("Переключить соотношение 9:16 / 16:9")
                         
+                        // Draggable Handle
                         WindowDragArea()
-                            .frame(height: 20)
+                            .frame(width: 40, height: 20)
+                            .overlay(
+                                Image(systemName: "line.3.horizontal")
+                                    .font(.system(size: 9, weight: .bold))
+                                    .foregroundColor(.white.opacity(0.4))
+                            )
                         
                         // Cheat Sheet button
                         Button(action: { manager.showCheatSheet.toggle() }) {
